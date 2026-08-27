@@ -82,43 +82,51 @@ play. Multiplayer is a long-term goal, not a v1 requirement.
 - [x] Basic third-person character controller (WASD + mouse-look, sprint,
       jump) — `scripts/player/player_controller.gd`
 - [x] Minimal test world (ground plane, sky, directional light) —
-      `scenes/world/test_world.tscn`
+      `scenes/world/test_world.tscn`, with a dozen Nature Kit trees
+      scattered around spawn for visual context (not a real level yet)
 - [x] Wolf model (Quaternius, CC0) swapped in as the v1 playable animal —
       `assets/models/Wolf.gltf`, wired into `scenes/player/player.tscn`
 - [x] Kenney Nature Kit (CC0) imported for future environment art —
       `assets/models/nature-kit/` (329 props: trees, rocks, fences, paths,
-      etc.), not yet placed in any level
-- [x] Idle/Walk animations wired to movement state
-      (`player_controller.gd` plays "Walk" while moving, "Idle" at rest)
-- [ ] Combat system (attack, dodge, stamina, hit reactions)
+      etc.), only the trees are placed so far
+- [x] Idle/Walk/Gallop animations wired to movement state (walk vs. sprint)
+- [x] Attack animation wired to the `attack` input (left mouse) — plays
+      once, blocks movement animations until it finishes. No hit
+      detection or damage yet, animation only.
+- [x] Camera distance cycling (`C` key) — far/mid/close, smoothly lerped
+- [x] Debug overlay (`F3` to toggle) — FPS, frame/physics time, RAM, CPU,
+      draw calls, object/node counts — `scripts/ui/debug_overlay.gd`
+- [ ] Combat system: hit detection, damage, stamina, dodge, hit reactions
 - [ ] Hostile wildlife / AI
 - [ ] Currency + progression systems
-- [ ] Open-world level design beyond the flat test plane (nature-kit props
-      unused so far)
+- [ ] Open-world level design beyond scattered trees on a flat plane
 
 ## Next steps
 
 Roughly in the order they unblock each other:
 
-1. **Sprint/Gallop animation.** `sprint` input and `sprint_speed` already
-   exist in `player_controller.gd`, but sprinting still plays the Walk
-   animation. Wire the pack's `Gallop` clip in the same way Idle/Walk were
-   wired.
-2. **Build a real level from the Nature Kit.** `test_world.tscn` is still a
-   flat plane. Use `assets/models/nature-kit/*.glb` to build the first
-   biome (terrain variation, trees, rocks, paths) — this is a prerequisite
-   for "open-world exploration" actually meaning something.
-3. **Combat system.** The Wolf pack already has `Attack`, `Idle_HitReact1`,
-   `Idle_HitReact2`, and `Death` animations ready to use. Needs: an attack
-   input action → animation → hit detection (hitbox/area or raycast)
-   → damage application, plus a health/stamina resource on the player.
-   `dodge` input action already exists in `project.godot` but has no
-   behavior yet.
+1. **Hit detection + damage.** The Attack *animation* is wired but does
+   nothing on hit yet. Needs a hitbox (Area3D on the model, active during
+   part of the Attack clip) or a forward raycast/shapecast, a damage
+   value, and something to apply it to once an enemy exists.
+2. **Health/stamina resource.** A simple resource on the player (and
+   later enemies) — health that damage reduces, stamina that
+   sprint/attack/dodge consume and regen over time. `Idle_HitReact1`,
+   `Idle_HitReact2`, and `Death` animations are already in the Wolf pack,
+   ready to wire once there's a health value to react to.
+3. **Dodge.** `dodge` input action already exists in `project.godot` but
+   has no behavior yet — no dedicated dodge animation in the pack, so this
+   likely means a quick movement burst + brief i-frames rather than an
+   animation swap.
 4. **Hostile wildlife / AI.** Needs at least one enemy type with basic
    state-machine behavior (idle/patrol → chase → attack) to give combat
    something to hit. Could reuse another animal from the same Quaternius
    pack (Fox, Husky, etc. — same rig/animation set) as a first enemy.
-5. **Currency + progression.** No systems exist yet. Needs a currency
+5. **Build a real level from the Nature Kit.** `test_world.tscn` is still
+   a flat plane with a handful of decorative trees. Use the other 300+
+   `assets/models/nature-kit/*.glb` props (rocks, cliffs, paths, water) to
+   build the first real biome with terrain variation.
+6. **Currency + progression.** No systems exist yet. Needs a currency
    resource, a source (kills/exploration per the GDD), and at least one
    spend sink (cosmetic or stat upgrade) to close the loop.
 
