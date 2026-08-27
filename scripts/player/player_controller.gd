@@ -8,14 +8,23 @@ extends CharacterBody3D
 @export var mouse_sensitivity: float = 0.003
 @export var camera_pitch_min: float = -60.0
 @export var camera_pitch_max: float = 30.0
+@export var camera_zoom_speed: float = 8.0
 
 @onready var camera_pivot: Node3D = $CameraPivot
 @onready var camera: Camera3D = $CameraPivot/SpringArm3D/Camera3D
+@onready var spring_arm: SpringArm3D = $CameraPivot/SpringArm3D
 @onready var model: Node3D = $Model
 @onready var anim_player: AnimationPlayer = $Model/Wolf/AnimationPlayer
 
 var gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
 var camera_pitch: float = 0.0
+
+# Far distance is whatever the scene's SpringArm3D was authored with; mid/close
+# are scaled down from that so tuning the scene's spring_length rescales all three.
+var camera_distances: Array[float] = []
+var camera_distance_index: int = 0
+
+var is_attacking: bool = false
 
 func _ready() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
@@ -24,10 +33,21 @@ func _ready() -> void:
 	anim_player.get_animation("Walk").loop_mode = Animation.LOOP_LINEAR
 	anim_player.get_animation("Gallop").loop_mode = Animation.LOOP_LINEAR
 	anim_player.play("Idle")
+	anim_player.animation_finished.connect(_on_animation_finished)
+
+	var far_distance := spring_arm.spring_length
+	camera_distances = [far_distance, far_distance * 2.0 / 3.0, far_distance / 3.0]
+
+func _on_animation_finished(anim_name: StringName) -> void:
+	if anim_name == "Attack":
+		is_attacking = false
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED else Input.MOUSE_MODE_CAPTURED
+
+	if event.is_action_pressed("cycle_camera_distance"):
+		camera_distance_index = (camera_distance_index + 1) % camera_distances.size()
 
 	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		camera_pivot.rotate_y(-event.relative.x * mouse_sensitivity)
@@ -35,11 +55,17 @@ func _unhandled_input(event: InputEvent) -> void:
 		camera_pivot.rotation.x = camera_pitch
 
 func _physics_process(delta: float) -> void:
+	spring_arm.spring_length = lerp(spring_arm.spring_length, camera_distances[camera_distance_index], camera_zoom_speed * delta)
+
 	if not is_on_floor():
 		velocity.y -= gravity * delta
 
 	if Input.is_action_just_pressed("jump") and is_on_floor():
 		velocity.y = jump_velocity
+
+	if Input.is_action_just_pressed("attack") and not is_attacking:
+		is_attacking = true
+		anim_player.play("Attack")
 
 	var input_dir := Input.get_vector("move_left", "move_right", "move_forward", "move_back")
 	var cam_basis := camera_pivot.global_transform.basis
@@ -61,8 +87,9 @@ func _physics_process(delta: float) -> void:
 	if move_dir.length() > 0.1:
 		var target_angle := atan2(-move_dir.x, -move_dir.z)
 		model.rotation.y = lerp_angle(model.rotation.y, target_angle, rotation_speed * delta)
-		anim_player.play("Gallop" if is_sprinting else "Walk")
-	else:
+		if not is_attacking:
+			anim_player.play("Gallop" if is_sprinting else "Walk")
+	elif not is_attacking:
 		anim_player.play("Idle")
 
 	move_and_slide()
