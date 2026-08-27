@@ -12,12 +12,17 @@ extends CharacterBody3D
 @onready var camera_pivot: Node3D = $CameraPivot
 @onready var camera: Camera3D = $CameraPivot/SpringArm3D/Camera3D
 @onready var model: Node3D = $Model
+@onready var anim_player: AnimationPlayer = $Model/Wolf/AnimationPlayer
 
 var gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
 var camera_pitch: float = 0.0
 
 func _ready() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	# The pack's animations import with loop_mode off; movement loops need it on.
+	anim_player.get_animation("Idle").loop_mode = Animation.LOOP_LINEAR
+	anim_player.get_animation("Walk").loop_mode = Animation.LOOP_LINEAR
+	anim_player.play("Idle")
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
@@ -54,5 +59,8 @@ func _physics_process(delta: float) -> void:
 	if move_dir.length() > 0.1:
 		var target_angle := atan2(-move_dir.x, -move_dir.z)
 		model.rotation.y = lerp_angle(model.rotation.y, target_angle, rotation_speed * delta)
+		anim_player.play("Walk")
+	else:
+		anim_player.play("Idle")
 
 	move_and_slide()
