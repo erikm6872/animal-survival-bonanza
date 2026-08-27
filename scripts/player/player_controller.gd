@@ -120,6 +120,12 @@ func _physics_process(delta: float) -> void:
 
 	if Input.is_action_just_pressed("debug_damage_self"):
 		damageable.take_damage(10.0)
+		if is_dead:
+			# take_damage() may have killed the player synchronously (via the
+			# damaged/died signals) partway through this frame; bail out now so
+			# the movement/animation code below doesn't stomp the Death clip
+			# with Idle/Walk before the next frame's early-return catches it.
+			return
 
 	if Input.is_action_just_pressed("jump") and is_on_floor():
 		velocity.y = jump_velocity
