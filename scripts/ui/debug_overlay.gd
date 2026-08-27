@@ -1,6 +1,8 @@
 extends CanvasLayer
 
-@onready var label: Label = $PanelContainer/MarginContainer/Label
+@onready var debug_panel: Control = $VBoxContainer/DebugPanel
+@onready var controls_panel: Control = $VBoxContainer/ControlsPanel
+@onready var label: Label = $VBoxContainer/DebugPanel/MarginContainer/Label
 
 const UPDATE_INTERVAL: float = 0.25
 
@@ -17,9 +19,12 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	if Input.is_action_just_pressed("toggle_debug"):
-		visible = not visible
+		debug_panel.visible = not debug_panel.visible
 
-	if not visible:
+	if Input.is_action_just_pressed("toggle_controls"):
+		controls_panel.visible = not controls_panel.visible
+
+	if not debug_panel.visible:
 		return
 
 	_time_since_update += delta

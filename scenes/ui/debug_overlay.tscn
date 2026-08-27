@@ -13,7 +13,7 @@ corner_radius_bottom_left = 4
 layer = 100
 script = ExtResource("1_script")
 
-[node name="PanelContainer" type="PanelContainer" parent="."]
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
 anchors_preset = 0
 anchor_left = 1.0
 anchor_top = 0.0
@@ -25,16 +25,50 @@ offset_right = -10.0
 offset_bottom = 10.0
 grow_horizontal = 0
 grow_vertical = 1
+theme_override_constants/separation = 6
+
+[node name="DebugPanel" type="PanelContainer" parent="VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 8
 theme_override_styles/panel = SubResource("StyleBoxFlat_bg")
 
-[node name="MarginContainer" type="MarginContainer" parent="PanelContainer"]
+[node name="MarginContainer" type="MarginContainer" parent="VBoxContainer/DebugPanel"]
+layout_mode = 2
 theme_override_constants/margin_left = 10
 theme_override_constants/margin_top = 8
 theme_override_constants/margin_right = 10
 theme_override_constants/margin_bottom = 8
 
-[node name="Label" type="Label" parent="PanelContainer/MarginContainer"]
+[node name="Label" type="Label" parent="VBoxContainer/DebugPanel/MarginContainer"]
+layout_mode = 2
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_font_sizes/font_size = 14
 horizontal_alignment = 2
 text = "FPS: --"
+
+[node name="ControlsPanel" type="PanelContainer" parent="VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 8
+theme_override_styles/panel = SubResource("StyleBoxFlat_bg")
+
+[node name="MarginContainer" type="MarginContainer" parent="VBoxContainer/ControlsPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 8
+
+[node name="Label" type="Label" parent="VBoxContainer/ControlsPanel/MarginContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 14
+horizontal_alignment = 2
+text = "WASD - Move
+Mouse - Look
+Space - Jump
+Shift - Sprint
+Left Click - Attack
+C - Camera Distance
+Esc - Release Cursor
+F1 - Toggle Controls
+F3 - Toggle Debug Info"
