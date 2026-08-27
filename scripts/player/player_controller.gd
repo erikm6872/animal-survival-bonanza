@@ -22,6 +22,7 @@ func _ready() -> void:
 	# The pack's animations import with loop_mode off; movement loops need it on.
 	anim_player.get_animation("Idle").loop_mode = Animation.LOOP_LINEAR
 	anim_player.get_animation("Walk").loop_mode = Animation.LOOP_LINEAR
+	anim_player.get_animation("Gallop").loop_mode = Animation.LOOP_LINEAR
 	anim_player.play("Idle")
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -49,8 +50,9 @@ func _physics_process(delta: float) -> void:
 	right.y = 0
 	right = right.normalized()
 
+	var is_sprinting := Input.is_action_pressed("sprint")
 	var move_dir := (forward * -input_dir.y + right * input_dir.x)
-	var target_speed := sprint_speed if Input.is_action_pressed("sprint") else walk_speed
+	var target_speed := sprint_speed if is_sprinting else walk_speed
 	var target_velocity := move_dir * target_speed
 
 	velocity.x = move_toward(velocity.x, target_velocity.x, acceleration * delta * target_speed)
@@ -59,7 +61,7 @@ func _physics_process(delta: float) -> void:
 	if move_dir.length() > 0.1:
 		var target_angle := atan2(-move_dir.x, -move_dir.z)
 		model.rotation.y = lerp_angle(model.rotation.y, target_angle, rotation_speed * delta)
-		anim_player.play("Walk")
+		anim_player.play("Gallop" if is_sprinting else "Walk")
 	else:
 		anim_player.play("Idle")
 
