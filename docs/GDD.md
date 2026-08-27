@@ -79,19 +79,55 @@ play. Multiplayer is a long-term goal, not a v1 requirement.
 ## Current implementation status (v0.1)
 
 - [x] Project scaffold, folder structure, license, README
-- [x] Basic third-person character controller (capsule placeholder,
-      WASD + mouse-look, sprint, jump) — `scripts/player/player_controller.gd`
+- [x] Basic third-person character controller (WASD + mouse-look, sprint,
+      jump) — `scripts/player/player_controller.gd`
 - [x] Minimal test world (ground plane, sky, directional light) —
       `scenes/world/test_world.tscn`
+- [x] Wolf model (Quaternius, CC0) swapped in as the v1 playable animal —
+      `assets/models/Wolf.gltf`, wired into `scenes/player/player.tscn`
+- [x] Kenney Nature Kit (CC0) imported for future environment art —
+      `assets/models/nature-kit/` (329 props: trees, rocks, fences, paths,
+      etc.), not yet placed in any level
+- [x] Idle/Walk animations wired to movement state
+      (`player_controller.gd` plays "Walk" while moving, "Idle" at rest)
 - [ ] Combat system (attack, dodge, stamina, hit reactions)
 - [ ] Hostile wildlife / AI
 - [ ] Currency + progression systems
-- [ ] Real animal model/animations (currently primitive placeholder)
-- [ ] Open-world level design beyond the flat test plane
+- [ ] Open-world level design beyond the flat test plane (nature-kit props
+      unused so far)
+
+## Next steps
+
+Roughly in the order they unblock each other:
+
+1. **Sprint/Gallop animation.** `sprint` input and `sprint_speed` already
+   exist in `player_controller.gd`, but sprinting still plays the Walk
+   animation. Wire the pack's `Gallop` clip in the same way Idle/Walk were
+   wired.
+2. **Build a real level from the Nature Kit.** `test_world.tscn` is still a
+   flat plane. Use `assets/models/nature-kit/*.glb` to build the first
+   biome (terrain variation, trees, rocks, paths) — this is a prerequisite
+   for "open-world exploration" actually meaning something.
+3. **Combat system.** The Wolf pack already has `Attack`, `Idle_HitReact1`,
+   `Idle_HitReact2`, and `Death` animations ready to use. Needs: an attack
+   input action → animation → hit detection (hitbox/area or raycast)
+   → damage application, plus a health/stamina resource on the player.
+   `dodge` input action already exists in `project.godot` but has no
+   behavior yet.
+4. **Hostile wildlife / AI.** Needs at least one enemy type with basic
+   state-machine behavior (idle/patrol → chase → attack) to give combat
+   something to hit. Could reuse another animal from the same Quaternius
+   pack (Fox, Husky, etc. — same rig/animation set) as a first enemy.
+5. **Currency + progression.** No systems exist yet. Needs a currency
+   resource, a source (kills/exploration per the GDD), and at least one
+   spend sink (cosmetic or stat upgrade) to close the loop.
 
 ## Open questions for future sessions
 
 - Exact stat set for the first animal (health/stamina/speed/damage
   baseline numbers).
-- Biome theme for the first real level (forest, savanna, etc.).
-- Specific free asset packs to adopt for the animal model and environment.
+- Biome theme for the first real level (forest, savanna, etc.) — the
+  Nature Kit supports forest/rock/farm/beach-ish themes out of the box.
+- Whether additional animals (for enemies or future playable species) come
+  from the same Quaternius pack already partially downloaded, or a new
+  source.
