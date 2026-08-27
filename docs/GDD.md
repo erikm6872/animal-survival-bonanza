@@ -91,12 +91,18 @@ play. Multiplayer is a long-term goal, not a v1 requirement.
       etc.), only the trees are placed so far
 - [x] Idle/Walk/Gallop animations wired to movement state (walk vs. sprint)
 - [x] Attack animation wired to the `attack` input (left mouse) — plays
-      once, blocks movement animations until it finishes. No hit
-      detection or damage yet, animation only.
+      once, blocks movement animations until it finishes
+- [x] Melee hit detection — `scripts/combat/hitbox.gd` (Area3D, active
+      during the Attack clip's bite-lunge window) and
+      `scripts/combat/damageable.gd` (health + `take_damage()`, reusable
+      component). Player has a Damageable so it's hittable once enemies
+      exist. A respawning training dummy with a floating HP label
+      (`scenes/world/training_dummy.tscn`) verifies it works.
 - [x] Camera distance cycling (`C` key) — far/mid/close, smoothly lerped
-- [x] Debug overlay (`F3` to toggle) — FPS, frame/physics time, RAM, CPU,
-      draw calls, object/node counts — `scripts/ui/debug_overlay.gd`
-- [ ] Combat system: hit detection, damage, stamina, dodge, hit reactions
+- [x] Debug overlay (`F3`) and key bindings reference (`F1`), stacked
+      top-right — `scripts/ui/debug_overlay.gd`
+- [ ] Player health/stamina, hit reactions, death
+- [ ] Dodge
 - [ ] Hostile wildlife / AI
 - [ ] Currency + progression systems
 - [ ] Open-world level design beyond scattered trees on a flat plane
@@ -105,23 +111,25 @@ play. Multiplayer is a long-term goal, not a v1 requirement.
 
 Roughly in the order they unblock each other:
 
-1. **Hit detection + damage.** The Attack *animation* is wired but does
-   nothing on hit yet. Needs a hitbox (Area3D on the model, active during
-   part of the Attack clip) or a forward raycast/shapecast, a damage
-   value, and something to apply it to once an enemy exists.
-2. **Health/stamina resource.** A simple resource on the player (and
-   later enemies) — health that damage reduces, stamina that
-   sprint/attack/dodge consume and regen over time. `Idle_HitReact1`,
-   `Idle_HitReact2`, and `Death` animations are already in the Wolf pack,
-   ready to wire once there's a health value to react to.
-3. **Dodge.** `dodge` input action already exists in `project.godot` but
-   has no behavior yet — no dedicated dodge animation in the pack, so this
-   likely means a quick movement burst + brief i-frames rather than an
-   animation swap.
+1. **Player-facing health.** `Damageable` exists on the player but nothing
+   reacts to it yet — no health bar, no hit-react animation, no death
+   state. `Idle_HitReact1`, `Idle_HitReact2`, and `Death` are already in
+   the Wolf pack; wire `Damageable.damaged`/`died` to play them and to a
+   simple health bar (screen-space, or reuse the training dummy's
+   Label3D approach).
+2. **Stamina.** Sprint/attack/dodge should consume stamina and regen over
+   time, per the GDD's combat pillar. No resource for this exists yet —
+   needs the same treatment as health (a value + a UI element).
+3. **Dodge.** `dodge` input action exists in `project.godot` but has no
+   behavior — no dedicated dodge animation in the pack, so likely a quick
+   movement burst + brief i-frames rather than an animation swap.
 4. **Hostile wildlife / AI.** Needs at least one enemy type with basic
-   state-machine behavior (idle/patrol → chase → attack) to give combat
-   something to hit. Could reuse another animal from the same Quaternius
-   pack (Fox, Husky, etc. — same rig/animation set) as a first enemy.
+   state-machine behavior (idle/patrol → chase → attack) so combat has
+   something to actually fight back. The training dummy proved hit
+   detection works but doesn't hit back. Could reuse another animal from
+   the same Quaternius pack (Fox, Husky, etc. — same rig/animation set,
+   including `Idle_HitReact*`/`Death`) as the first enemy, giving it a
+   Damageable + its own Hitbox.
 5. **Build a real level from the Nature Kit.** `test_world.tscn` is still
    a flat plane with a handful of decorative trees. Use the other 300+
    `assets/models/nature-kit/*.glb` props (rocks, cliffs, paths, water) to
