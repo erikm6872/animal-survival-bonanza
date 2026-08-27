@@ -15,6 +15,7 @@ extends CharacterBody3D
 @onready var spring_arm: SpringArm3D = $CameraPivot/SpringArm3D
 @onready var model: Node3D = $Model
 @onready var anim_player: AnimationPlayer = $Model/Wolf/AnimationPlayer
+@onready var hitbox: Hitbox = $Model/Hitbox
 
 var gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
 var camera_pitch: float = 0.0
@@ -24,7 +25,14 @@ var camera_pitch: float = 0.0
 var camera_distances: Array[float] = []
 var camera_distance_index: int = 0
 
+# The Attack clip has no keyframes between these two points (0.6-0.8s) — the
+# bite lunge — so that's the window the hitbox is live for.
+const ATTACK_HIT_START: float = 0.55
+const ATTACK_HIT_END: float = 0.85
+
 var is_attacking: bool = false
+var attack_time: float = 0.0
+var hitbox_open: bool = false
 
 func _ready() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
@@ -34,6 +42,7 @@ func _ready() -> void:
 	anim_player.get_animation("Gallop").loop_mode = Animation.LOOP_LINEAR
 	anim_player.play("Idle")
 	anim_player.animation_finished.connect(_on_animation_finished)
+	hitbox.owner_body = self
 
 	var far_distance := spring_arm.spring_length
 	camera_distances = [far_distance, far_distance * 2.0 / 3.0, far_distance / 3.0]
@@ -41,6 +50,8 @@ func _ready() -> void:
 func _on_animation_finished(anim_name: StringName) -> void:
 	if anim_name == "Attack":
 		is_attacking = false
+		hitbox_open = false
+		hitbox.deactivate()
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
@@ -65,7 +76,17 @@ func _physics_process(delta: float) -> void:
 
 	if Input.is_action_just_pressed("attack") and not is_attacking:
 		is_attacking = true
+		attack_time = 0.0
 		anim_player.play("Attack")
+
+	if is_attacking:
+		attack_time += delta
+		if not hitbox_open and attack_time >= ATTACK_HIT_START and attack_time < ATTACK_HIT_END:
+			hitbox_open = true
+			hitbox.activate()
+		elif hitbox_open and attack_time >= ATTACK_HIT_END:
+			hitbox_open = false
+			hitbox.deactivate()
 
 	var input_dir := Input.get_vector("move_left", "move_right", "move_forward", "move_back")
 	var cam_basis := camera_pivot.global_transform.basis
