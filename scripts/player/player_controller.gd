@@ -16,6 +16,8 @@ extends CharacterBody3D
 @onready var model: Node3D = $Model
 @onready var anim_player: AnimationPlayer = $Model/Wolf/AnimationPlayer
 @onready var hitbox: Hitbox = $Model/Hitbox
+@onready var damageable: Damageable = $Damageable
+@onready var hud: PlayerHUD = $PlayerHUD
 
 var gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
 var camera_pitch: float = 0.0
@@ -30,9 +32,15 @@ var camera_distance_index: int = 0
 const ATTACK_HIT_START: float = 0.55
 const ATTACK_HIT_END: float = 0.85
 
+const HIT_REACT_ANIMS: Array[String] = ["Idle_HitReact1", "Idle_HitReact2"]
+const DEATH_RESPAWN_DELAY: float = 3.0
+
 var is_attacking: bool = false
 var attack_time: float = 0.0
 var hitbox_open: bool = false
+
+var is_hit_reacting: bool = false
+var is_dead: bool = false
 
 func _ready() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
@@ -44,6 +52,10 @@ func _ready() -> void:
 	anim_player.animation_finished.connect(_on_animation_finished)
 	hitbox.owner_body = self
 
+	damageable.damaged.connect(_on_damaged)
+	damageable.died.connect(_on_died)
+	hud.update_health(damageable.current_health, damageable.max_health)
+
 	var far_distance := spring_arm.spring_length
 	camera_distances = [far_distance, far_distance * 2.0 / 3.0, far_distance / 3.0]
 
@@ -52,6 +64,35 @@ func _on_animation_finished(anim_name: StringName) -> void:
 		is_attacking = false
 		hitbox_open = false
 		hitbox.deactivate()
+	elif anim_name in HIT_REACT_ANIMS:
+		is_hit_reacting = false
+
+func _on_damaged(_amount: float, _source: Node) -> void:
+	hud.update_health(damageable.current_health, damageable.max_health)
+	if is_dead:
+		return
+	is_hit_reacting = true
+	is_attacking = false
+	hitbox_open = false
+	hitbox.deactivate()
+	anim_player.play(HIT_REACT_ANIMS.pick_random())
+
+func _on_died(_source: Node) -> void:
+	is_dead = true
+	is_attacking = false
+	is_hit_reacting = false
+	hitbox_open = false
+	hitbox.deactivate()
+	anim_player.play("Death")
+	await get_tree().create_timer(DEATH_RESPAWN_DELAY).timeout
+	_respawn()
+
+func _respawn() -> void:
+	damageable.current_health = damageable.max_health
+	damageable.is_dead = false
+	is_dead = false
+	hud.update_health(damageable.current_health, damageable.max_health)
+	anim_player.play("Idle")
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
@@ -71,10 +112,19 @@ func _physics_process(delta: float) -> void:
 	if not is_on_floor():
 		velocity.y -= gravity * delta
 
+	if is_dead:
+		velocity.x = move_toward(velocity.x, 0.0, acceleration * delta * walk_speed)
+		velocity.z = move_toward(velocity.z, 0.0, acceleration * delta * walk_speed)
+		move_and_slide()
+		return
+
+	if Input.is_action_just_pressed("debug_damage_self"):
+		damageable.take_damage(10.0)
+
 	if Input.is_action_just_pressed("jump") and is_on_floor():
 		velocity.y = jump_velocity
 
-	if Input.is_action_just_pressed("attack") and not is_attacking:
+	if Input.is_action_just_pressed("attack") and not is_attacking and not is_hit_reacting:
 		is_attacking = true
 		attack_time = 0.0
 		anim_player.play("Attack")
@@ -108,9 +158,9 @@ func _physics_process(delta: float) -> void:
 	if move_dir.length() > 0.1:
 		var target_angle := atan2(-move_dir.x, -move_dir.z)
 		model.rotation.y = lerp_angle(model.rotation.y, target_angle, rotation_speed * delta)
-		if not is_attacking:
+		if not is_attacking and not is_hit_reacting:
 			anim_player.play("Gallop" if is_sprinting else "Walk")
-	elif not is_attacking:
+	elif not is_attacking and not is_hit_reacting:
 		anim_player.play("Idle")
 
 	move_and_slide()

@@ -1,9 +1,10 @@
-[gd_scene load_steps=7 format=3 uid="uid://b2m8w0h0kxqf1"]
+[gd_scene load_steps=8 format=3 uid="uid://b2m8w0h0kxqf1"]
 
 [ext_resource type="Script" path="res://scripts/player/player_controller.gd" id="1_ctrl"]
 [ext_resource type="PackedScene" path="res://assets/models/Wolf.gltf" id="2_wolf"]
 [ext_resource type="Script" path="res://scripts/combat/hitbox.gd" id="3_hitbox"]
 [ext_resource type="Script" path="res://scripts/combat/damageable.gd" id="4_damageable"]
+[ext_resource type="PackedScene" path="res://scenes/ui/player_hud.tscn" id="5_hud"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_1"]
 radius = 0.5
@@ -21,6 +22,8 @@ shape = SubResource("CapsuleShape3D_1")
 
 [node name="Damageable" type="Node" parent="."]
 script = ExtResource("4_damageable")
+
+[node name="PlayerHUD" parent="." instance=ExtResource("5_hud")]
 
 [node name="Model" type="Node3D" parent="."]
 
