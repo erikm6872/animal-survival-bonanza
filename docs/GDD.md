@@ -108,7 +108,11 @@ play. Multiplayer is a long-term goal, not a v1 requirement.
       animations (`Idle_HitReact1/2`, picked at random) on damage, `Death`
       on zero HP, respawn a few seconds later. Debug-only `K` key to
       damage self for testing, since nothing deals damage back yet.
-- [ ] Stamina
+- [x] Stamina — `scripts/combat/stamina.gd`, regens after a short delay,
+      an "exhausted" state (must recover above 25% before spending again)
+      to avoid flicker at empty. Sprint drains it continuously and falls
+      back to walk speed when exhausted; attack costs a flat amount and
+      is refused without enough. Bar added under health in the HUD.
 - [ ] Dodge
 - [ ] Hostile wildlife / AI
 - [ ] Currency + progression systems
@@ -118,24 +122,22 @@ play. Multiplayer is a long-term goal, not a v1 requirement.
 
 Roughly in the order they unblock each other:
 
-1. **Stamina.** Sprint/attack/dodge should consume stamina and regen over
-   time, per the GDD's combat pillar. No resource for this exists yet —
-   needs the same treatment as health (a value + a UI element).
-2. **Dodge.** `dodge` input action exists in `project.godot` but has no
+1. **Dodge.** `dodge` input action exists in `project.godot` but has no
    behavior — no dedicated dodge animation in the pack, so likely a quick
-   movement burst + brief i-frames rather than an animation swap.
-3. **Hostile wildlife / AI.** Needs at least one enemy type with basic
+   movement burst + brief i-frames rather than an animation swap. Should
+   spend stamina like attack does now (`Stamina.try_spend`).
+2. **Hostile wildlife / AI.** Needs at least one enemy type with basic
    state-machine behavior (idle/patrol → chase → attack) so combat has
    something to actually fight back. The training dummy proved hit
    detection works but doesn't hit back. Could reuse another animal from
    the same Quaternius pack (Fox, Husky, etc. — same rig/animation set,
    including `Idle_HitReact*`/`Death`) as the first enemy, giving it a
    Damageable + its own Hitbox.
-4. **Build a real level from the Nature Kit.** `test_world.tscn` is still
+3. **Build a real level from the Nature Kit.** `test_world.tscn` is still
    a flat plane with a handful of decorative trees. Use the other 300+
    `assets/models/nature-kit/*.glb` props (rocks, cliffs, paths, water) to
    build the first real biome with terrain variation.
-5. **Currency + progression.** No systems exist yet. Needs a currency
+4. **Currency + progression.** No systems exist yet. Needs a currency
    resource, a source (kills/exploration per the GDD), and at least one
    spend sink (cosmetic or stat upgrade) to close the loop.
 
