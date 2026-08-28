@@ -41,7 +41,8 @@ const SPRINT_STAMINA_DRAIN_RATE: float = 25.0 ## per second, while actively spri
 
 const DODGE_STAMINA_COST: float = 25.0
 const DODGE_SPEED: float = 14.0
-const DODGE_DURATION: float = 0.25 ## also how long the i-frames last
+const DODGE_DURATION: float = 0.6 ## also how long the i-frames last
+const DODGE_ANIM: String = "Gallop_Jump" ## has a tucked-legs pose, reads better mid-roll than Gallop
 
 var is_attacking: bool = false
 var attack_time: float = 0.0
@@ -163,16 +164,21 @@ func _physics_process(delta: float) -> void:
 		dodge_time = 0.0
 		dodge_direction = move_dir.normalized() if move_dir.length() > 0.1 else -forward
 		damageable.is_invulnerable = true
-		anim_player.play("Gallop")
+		var dodge_anim_speed := anim_player.get_animation(DODGE_ANIM).length / DODGE_DURATION
+		anim_player.play(DODGE_ANIM, -1, dodge_anim_speed)
 
 	if is_dodging:
 		dodge_time += delta
 		velocity.x = dodge_direction.x * DODGE_SPEED
 		velocity.z = dodge_direction.z * DODGE_SPEED
 		model.rotation.y = atan2(-dodge_direction.x, -dodge_direction.z)
+		# Full end-over-end roll along the travel direction, timed to finish
+		# with the dodge.
+		model.rotation.x = -(dodge_time / DODGE_DURATION) * TAU
 		if dodge_time >= DODGE_DURATION:
 			is_dodging = false
 			damageable.is_invulnerable = false
+			model.rotation.x = 0.0
 		move_and_slide()
 		return
 
