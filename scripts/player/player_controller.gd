@@ -43,6 +43,11 @@ const DODGE_STAMINA_COST: float = 25.0
 const DODGE_SPEED: float = 14.0
 const DODGE_DURATION: float = 0.6 ## also how long the i-frames last
 const DODGE_ANIM: String = "Gallop_Jump" ## has a tucked-legs pose, reads better mid-roll than Gallop
+# The roll pivots around the model's origin, which sits at ground level (feet),
+# so without this the body sweeps below the floor as it rotates through
+# upside-down. This arcs it up and back down over the roll instead — also
+# just looks more like an actual tumble than a rotation-in-place.
+const DODGE_HOP_HEIGHT: float = 0.7
 
 var is_attacking: bool = false
 var attack_time: float = 0.0
@@ -172,13 +177,16 @@ func _physics_process(delta: float) -> void:
 		velocity.x = dodge_direction.x * DODGE_SPEED
 		velocity.z = dodge_direction.z * DODGE_SPEED
 		model.rotation.y = atan2(-dodge_direction.x, -dodge_direction.z)
+		var roll_progress := dodge_time / DODGE_DURATION
 		# Full end-over-end roll along the travel direction, timed to finish
 		# with the dodge.
-		model.rotation.x = -(dodge_time / DODGE_DURATION) * TAU
+		model.rotation.x = -roll_progress * TAU
+		model.position.y = sin(roll_progress * PI) * DODGE_HOP_HEIGHT
 		if dodge_time >= DODGE_DURATION:
 			is_dodging = false
 			damageable.is_invulnerable = false
 			model.rotation.x = 0.0
+			model.position.y = 0.0
 		move_and_slide()
 		return
 
