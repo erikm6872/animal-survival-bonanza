@@ -73,9 +73,9 @@ anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -150.0
-offset_top = -90.0
+offset_top = -115.0
 offset_right = 150.0
-offset_bottom = 90.0
+offset_bottom = 115.0
 theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
 
 [node name="MarginContainer" type="MarginContainer" parent="SettingsPanel/PanelContainer"]
@@ -109,6 +109,21 @@ min_value = 0.001
 max_value = 0.01
 step = 0.0005
 value = 0.003
+
+[node name="FullscreenRow" type="HBoxContainer" parent="SettingsPanel/PanelContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="FullscreenLabel" type="Label" parent="SettingsPanel/PanelContainer/MarginContainer/VBoxContainer/FullscreenRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+text = "Fullscreen"
+
+[node name="FullscreenButton" type="Button" parent="SettingsPanel/PanelContainer/MarginContainer/VBoxContainer/FullscreenRow"]
+layout_mode = 2
+toggle_mode = true
+text = "Off"
 
 [node name="BackButton" type="Button" parent="SettingsPanel/PanelContainer/MarginContainer/VBoxContainer"]
 layout_mode = 2
