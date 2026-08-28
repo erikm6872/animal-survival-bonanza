@@ -10,12 +10,13 @@ signal died(source: Node)
 
 var current_health: float = max_health
 var is_dead: bool = false
+var is_invulnerable: bool = false ## e.g. during a dodge's i-frames
 
 func _ready() -> void:
 	current_health = max_health
 
 func take_damage(amount: float, source: Node = null) -> void:
-	if is_dead:
+	if is_dead or is_invulnerable:
 		return
 	current_health = maxf(current_health - amount, 0.0)
 	damaged.emit(amount, source)

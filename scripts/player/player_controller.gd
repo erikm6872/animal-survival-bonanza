@@ -39,12 +39,20 @@ const DEATH_RESPAWN_DELAY: float = 3.0
 const ATTACK_STAMINA_COST: float = 15.0
 const SPRINT_STAMINA_DRAIN_RATE: float = 25.0 ## per second, while actively sprinting
 
+const DODGE_STAMINA_COST: float = 25.0
+const DODGE_SPEED: float = 14.0
+const DODGE_DURATION: float = 0.25 ## also how long the i-frames last
+
 var is_attacking: bool = false
 var attack_time: float = 0.0
 var hitbox_open: bool = false
 
 var is_hit_reacting: bool = false
 var is_dead: bool = false
+
+var is_dodging: bool = false
+var dodge_time: float = 0.0
+var dodge_direction: Vector3 = Vector3.ZERO
 
 func _ready() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
@@ -88,6 +96,8 @@ func _on_died(_source: Node) -> void:
 	is_dead = true
 	is_attacking = false
 	is_hit_reacting = false
+	is_dodging = false
+	damageable.is_invulnerable = false
 	hitbox_open = false
 	hitbox.deactivate()
 	anim_player.play("Death")
@@ -137,6 +147,35 @@ func _physics_process(delta: float) -> void:
 	if Input.is_action_just_pressed("jump") and is_on_floor():
 		velocity.y = jump_velocity
 
+	var input_dir := Input.get_vector("move_left", "move_right", "move_forward", "move_back")
+	var cam_basis := camera_pivot.global_transform.basis
+	var forward := -cam_basis.z
+	forward.y = 0
+	forward = forward.normalized()
+	var right := cam_basis.x
+	right.y = 0
+	right = right.normalized()
+	var move_dir := (forward * -input_dir.y + right * input_dir.x)
+
+	if Input.is_action_just_pressed("dodge") and not is_dodging and not is_attacking and not is_hit_reacting \
+			and stamina.try_spend(DODGE_STAMINA_COST):
+		is_dodging = true
+		dodge_time = 0.0
+		dodge_direction = move_dir.normalized() if move_dir.length() > 0.1 else -forward
+		damageable.is_invulnerable = true
+		anim_player.play("Gallop")
+
+	if is_dodging:
+		dodge_time += delta
+		velocity.x = dodge_direction.x * DODGE_SPEED
+		velocity.z = dodge_direction.z * DODGE_SPEED
+		model.rotation.y = atan2(-dodge_direction.x, -dodge_direction.z)
+		if dodge_time >= DODGE_DURATION:
+			is_dodging = false
+			damageable.is_invulnerable = false
+		move_and_slide()
+		return
+
 	if Input.is_action_just_pressed("attack") and not is_attacking and not is_hit_reacting \
 			and stamina.try_spend(ATTACK_STAMINA_COST):
 		is_attacking = true
@@ -152,16 +191,6 @@ func _physics_process(delta: float) -> void:
 			hitbox_open = false
 			hitbox.deactivate()
 
-	var input_dir := Input.get_vector("move_left", "move_right", "move_forward", "move_back")
-	var cam_basis := camera_pivot.global_transform.basis
-	var forward := -cam_basis.z
-	forward.y = 0
-	forward = forward.normalized()
-	var right := cam_basis.x
-	right.y = 0
-	right = right.normalized()
-
-	var move_dir := (forward * -input_dir.y + right * input_dir.x)
 	var is_sprinting := Input.is_action_pressed("sprint") and not stamina.is_exhausted and move_dir.length() > 0.1
 	if is_sprinting:
 		stamina.drain(SPRINT_STAMINA_DRAIN_RATE * delta)
