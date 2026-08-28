@@ -35,6 +35,9 @@ play. Multiplayer is a long-term goal, not a v1 requirement.
   and progression all built around it before adding more species.
 - Future species should feel mechanically distinct (not just reskins),
   but that's explicitly out of scope until v1's single animal is fun.
+- Longer-term, "mechanically distinct" likely means different *movement
+  domains* entirely (flight, swimming), not just different ground-based
+  stats — see "Future ideas" below.
 
 ## Combat
 
@@ -101,7 +104,11 @@ play. Multiplayer is a long-term goal, not a v1 requirement.
 - [x] Camera distance cycling (`C` key) — far/mid/close, smoothly lerped
 - [x] Debug overlay (`F3`) and key bindings reference (`F1`), stacked
       top-right — `scripts/ui/debug_overlay.gd`
-- [ ] Player health/stamina, hit reactions, death
+- [x] Player health — HUD bar (`scripts/ui/player_hud.gd`), hit-react
+      animations (`Idle_HitReact1/2`, picked at random) on damage, `Death`
+      on zero HP, respawn a few seconds later. Debug-only `K` key to
+      damage self for testing, since nothing deals damage back yet.
+- [ ] Stamina
 - [ ] Dodge
 - [ ] Hostile wildlife / AI
 - [ ] Currency + progression systems
@@ -111,32 +118,52 @@ play. Multiplayer is a long-term goal, not a v1 requirement.
 
 Roughly in the order they unblock each other:
 
-1. **Player-facing health.** `Damageable` exists on the player but nothing
-   reacts to it yet — no health bar, no hit-react animation, no death
-   state. `Idle_HitReact1`, `Idle_HitReact2`, and `Death` are already in
-   the Wolf pack; wire `Damageable.damaged`/`died` to play them and to a
-   simple health bar (screen-space, or reuse the training dummy's
-   Label3D approach).
-2. **Stamina.** Sprint/attack/dodge should consume stamina and regen over
+1. **Stamina.** Sprint/attack/dodge should consume stamina and regen over
    time, per the GDD's combat pillar. No resource for this exists yet —
    needs the same treatment as health (a value + a UI element).
-3. **Dodge.** `dodge` input action exists in `project.godot` but has no
+2. **Dodge.** `dodge` input action exists in `project.godot` but has no
    behavior — no dedicated dodge animation in the pack, so likely a quick
    movement burst + brief i-frames rather than an animation swap.
-4. **Hostile wildlife / AI.** Needs at least one enemy type with basic
+3. **Hostile wildlife / AI.** Needs at least one enemy type with basic
    state-machine behavior (idle/patrol → chase → attack) so combat has
    something to actually fight back. The training dummy proved hit
    detection works but doesn't hit back. Could reuse another animal from
    the same Quaternius pack (Fox, Husky, etc. — same rig/animation set,
    including `Idle_HitReact*`/`Death`) as the first enemy, giving it a
    Damageable + its own Hitbox.
-5. **Build a real level from the Nature Kit.** `test_world.tscn` is still
+4. **Build a real level from the Nature Kit.** `test_world.tscn` is still
    a flat plane with a handful of decorative trees. Use the other 300+
    `assets/models/nature-kit/*.glb` props (rocks, cliffs, paths, water) to
    build the first real biome with terrain variation.
-6. **Currency + progression.** No systems exist yet. Needs a currency
+5. **Currency + progression.** No systems exist yet. Needs a currency
    resource, a source (kills/exploration per the GDD), and at least one
    spend sink (cosmetic or stat upgrade) to close the loop.
+
+## Future ideas (post-v1, from co-creator brainstorming)
+
+Not scoped or scheduled — captured here so they aren't lost before v1
+(single grounded animal, single biome) is even done:
+
+- **Birds as a playable animal type.** Flight is a fundamentally different
+  movement model from the current ground-based CharacterBody3D controller
+  (3D freedom of movement, no "floor," different camera needs, likely
+  different stamina rules for sustained flight/gliding vs. flapping).
+  Not a reskin of the Wolf controller — needs its own movement script.
+- **Sea creatures as a playable animal type.** Swimming needs buoyancy,
+  water drag/currents, breath/oxygen management if surfacing matters, and
+  its own biome (ocean/water volumes don't exist in the project yet at
+  all). Also a fundamentally different controller from both the ground
+  and flight cases.
+- **Specific fish request: Ocean sunfish (Mola mola).** Named as a
+  wanted species for the sea-creature track. Distinctive body shape
+  (large, flat, nearly tailless) — an existing rigged low-poly asset may
+  not exist in the packs already in the project (Quaternius/Kenney), so
+  this may need sourcing a new asset or a custom model when the time
+  comes.
+- Each new environment (air, water) implies its own physics rules and
+  probably its own biome/level, not just a new model dropped into the
+  current ground world — worth treating as a separate vertical slice
+  rather than folding into the current single-biome roadmap above.
 
 ## Open questions for future sessions
 
