@@ -14,7 +14,7 @@ height = 1.6
 [sub_resource type="SphereShape3D" id="SphereShape3D_1"]
 radius = 0.35
 
-[node name="Player" type="CharacterBody3D"]
+[node name="Player" type="CharacterBody3D" groups=["player"]]
 script = ExtResource("1_ctrl")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]

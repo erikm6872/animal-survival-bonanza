@@ -118,9 +118,6 @@ func _respawn() -> void:
 	anim_player.play("Idle")
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed("ui_cancel"):
-		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED else Input.MOUSE_MODE_CAPTURED
-
 	if event.is_action_pressed("cycle_camera_distance"):
 		camera_distance_index = (camera_distance_index + 1) % camera_distances.size()
 

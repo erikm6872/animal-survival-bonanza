@@ -81,6 +81,7 @@ debug_damage_self={
 [autoload]
 
 DebugOverlay="*res://scenes/ui/debug_overlay.tscn"
+PauseMenu="*res://scenes/ui/pause_menu.tscn"
 
 [rendering]
 
