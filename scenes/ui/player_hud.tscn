@@ -1,4 +1,4 @@
-[gd_scene load_steps=4 format=3 uid="uid://bhud1p1ayerhud1"]
+[gd_scene load_steps=5 format=3 uid="uid://bhud1p1ayerhud1"]
 
 [ext_resource type="Script" path="res://scripts/ui/player_hud.gd" id="1_script"]
 
@@ -11,6 +11,13 @@ corner_radius_bottom_left = 4
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_fill"]
 bg_color = Color(0.75, 0.15, 0.15, 1)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_fill_stamina"]
+bg_color = Color(0.85, 0.7, 0.15, 1)
 corner_radius_top_left = 3
 corner_radius_top_right = 3
 corner_radius_bottom_right = 3
@@ -55,6 +62,21 @@ text = "HP: 100 / 100"
 custom_minimum_size = Vector2(220, 16)
 layout_mode = 2
 theme_override_styles/fill = SubResource("StyleBoxFlat_fill")
+min_value = 0.0
+max_value = 100.0
+value = 100.0
+show_percentage = false
+
+[node name="StaminaLabel" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 14
+text = "Stamina: 100 / 100"
+
+[node name="StaminaBar" type="ProgressBar" parent="PanelContainer/MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(220, 16)
+layout_mode = 2
+theme_override_styles/fill = SubResource("StyleBoxFlat_fill_stamina")
 min_value = 0.0
 max_value = 100.0
 value = 100.0

@@ -17,6 +17,7 @@ extends CharacterBody3D
 @onready var anim_player: AnimationPlayer = $Model/Wolf/AnimationPlayer
 @onready var hitbox: Hitbox = $Model/Hitbox
 @onready var damageable: Damageable = $Damageable
+@onready var stamina: Stamina = $Stamina
 @onready var hud: PlayerHUD = $PlayerHUD
 
 var gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
@@ -34,6 +35,9 @@ const ATTACK_HIT_END: float = 0.85
 
 const HIT_REACT_ANIMS: Array[String] = ["Idle_HitReact1", "Idle_HitReact2"]
 const DEATH_RESPAWN_DELAY: float = 3.0
+
+const ATTACK_STAMINA_COST: float = 15.0
+const SPRINT_STAMINA_DRAIN_RATE: float = 25.0 ## per second, while actively sprinting
 
 var is_attacking: bool = false
 var attack_time: float = 0.0
@@ -55,6 +59,9 @@ func _ready() -> void:
 	damageable.damaged.connect(_on_damaged)
 	damageable.died.connect(_on_died)
 	hud.update_health(damageable.current_health, damageable.max_health)
+
+	stamina.changed.connect(hud.update_stamina)
+	hud.update_stamina(stamina.current_stamina, stamina.max_stamina)
 
 	var far_distance := spring_arm.spring_length
 	camera_distances = [far_distance, far_distance * 2.0 / 3.0, far_distance / 3.0]
@@ -130,7 +137,8 @@ func _physics_process(delta: float) -> void:
 	if Input.is_action_just_pressed("jump") and is_on_floor():
 		velocity.y = jump_velocity
 
-	if Input.is_action_just_pressed("attack") and not is_attacking and not is_hit_reacting:
+	if Input.is_action_just_pressed("attack") and not is_attacking and not is_hit_reacting \
+			and stamina.try_spend(ATTACK_STAMINA_COST):
 		is_attacking = true
 		attack_time = 0.0
 		anim_player.play("Attack")
@@ -153,8 +161,11 @@ func _physics_process(delta: float) -> void:
 	right.y = 0
 	right = right.normalized()
 
-	var is_sprinting := Input.is_action_pressed("sprint")
 	var move_dir := (forward * -input_dir.y + right * input_dir.x)
+	var is_sprinting := Input.is_action_pressed("sprint") and not stamina.is_exhausted and move_dir.length() > 0.1
+	if is_sprinting:
+		stamina.drain(SPRINT_STAMINA_DRAIN_RATE * delta)
+
 	var target_speed := sprint_speed if is_sprinting else walk_speed
 	var target_velocity := move_dir * target_speed
 
