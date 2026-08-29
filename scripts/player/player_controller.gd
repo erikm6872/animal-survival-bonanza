@@ -67,6 +67,8 @@ var dodge_time: float = 0.0
 var dodge_direction: Vector3 = Vector3.ZERO
 
 func _ready() -> void:
+	global_position.y = TerrainHeight.get_height(global_position.x, global_position.z) + 1.0
+
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	# The pack's animations import with loop_mode off; movement loops need it on.
 	anim_player.get_animation("Idle").loop_mode = Animation.LOOP_LINEAR

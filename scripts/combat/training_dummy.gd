@@ -9,6 +9,8 @@ const RESPAWN_DELAY: float = 2.0
 @onready var mesh: MeshInstance3D = $MeshInstance3D
 
 func _ready() -> void:
+	global_position.y = TerrainHeight.get_height(global_position.x, global_position.z)
+
 	damageable.damaged.connect(_on_damaged)
 	damageable.died.connect(_on_died)
 	_update_label()
