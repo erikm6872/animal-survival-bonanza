@@ -5,6 +5,7 @@
 [ext_resource type="Script" path="res://scripts/world/terrain_generator.gd" id="9_terrain_gen"]
 [ext_resource type="Script" path="res://scripts/world/biome_populator.gd" id="10_biome_pop"]
 [ext_resource type="Script" path="res://scripts/world/water_generator.gd" id="11_water_gen"]
+[ext_resource type="Script" path="res://scripts/world/fish_spawner.gd" id="12_fish_spawner"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_1"]
 
@@ -45,3 +46,6 @@ script = ExtResource("10_biome_pop")
 
 [node name="Water" type="Node3D" parent="."]
 script = ExtResource("11_water_gen")
+
+[node name="Fish" type="Node3D" parent="."]
+script = ExtResource("12_fish_spawner")
