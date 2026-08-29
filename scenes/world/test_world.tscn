@@ -4,6 +4,7 @@
 [ext_resource type="PackedScene" path="res://scenes/world/training_dummy.tscn" id="8_training_dummy"]
 [ext_resource type="Script" path="res://scripts/world/terrain_generator.gd" id="9_terrain_gen"]
 [ext_resource type="Script" path="res://scripts/world/biome_populator.gd" id="10_biome_pop"]
+[ext_resource type="Script" path="res://scripts/world/water_generator.gd" id="11_water_gen"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_1"]
 
@@ -41,3 +42,6 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0, -3)
 
 [node name="Vegetation" type="Node3D" parent="."]
 script = ExtResource("10_biome_pop")
+
+[node name="Water" type="Node3D" parent="."]
+script = ExtResource("11_water_gen")

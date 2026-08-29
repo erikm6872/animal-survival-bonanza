@@ -44,6 +44,8 @@ func _scatter(scene_paths: Array[String], count: int, rng: RandomNumberGenerator
 		var z := rng.randf_range(-play_area_half_size, play_area_half_size)
 		if Vector2(x, z).length() < safe_zone_radius:
 			continue
+		if TerrainHeight.is_water(x, z):
+			continue
 
 		var y := TerrainHeight.get_height(x, z)
 		var scene: PackedScene = scenes[rng.randi_range(0, scenes.size() - 1)]
