@@ -84,14 +84,19 @@ play. Multiplayer is a long-term goal, not a v1 requirement.
 - [x] Project scaffold, folder structure, license, README
 - [x] Basic third-person character controller (WASD + mouse-look, sprint,
       jump) — `scripts/player/player_controller.gd`
-- [x] Minimal test world (ground plane, sky, directional light) —
-      `scenes/world/test_world.tscn`, with a dozen Nature Kit trees
-      scattered around spawn for visual context (not a real level yet)
 - [x] Wolf model (Quaternius, CC0) swapped in as the v1 playable animal —
       `assets/models/Wolf.gltf`, wired into `scenes/player/player.tscn`
-- [x] Kenney Nature Kit (CC0) imported for future environment art —
+- [x] Kenney Nature Kit (CC0) imported for environment art —
       `assets/models/nature-kit/` (329 props: trees, rocks, fences, paths,
-      etc.), only the trees are placed so far
+      etc.), trees/bushes now used by the biome (below); rocks/cliffs/paths
+      still unused
+- [x] Procedural rolling-hills terrain — `scripts/world/terrain_height.gd`
+      (layered FastNoiseLite, the single source of truth for ground height
+      at any x/z), `scripts/world/terrain_generator.gd` (builds the mesh +
+      matching `HeightMapShape3D` collision at runtime), replacing the old
+      flat plane. `scripts/world/biome_populator.gd` scatters 60 trees and
+      80 bushes across it (fixed RNG seed, height-sampled so nothing floats
+      or sinks). Rivers/lakes not started — explicitly next.
 - [x] Idle/Walk/Gallop animations wired to movement state (walk vs. sprint)
 - [x] Attack animation wired to the `attack` input (left mouse) — plays
       once, blocks movement animations until it finishes
@@ -118,26 +123,39 @@ play. Multiplayer is a long-term goal, not a v1 requirement.
       granting `Damageable.is_invulnerable` for the same window. No
       dedicated dodge clip in the pack, so it reuses Gallop visually.
       Costs stamina like attack; mutually exclusive with attack/hit-react.
+- [x] Pause menu (`Esc`) — Resume/Settings/Quit, autoloaded
+      (`scripts/ui/pause_menu.gd`), pauses via `get_tree().paused`.
+      Settings: mouse sensitivity, fullscreen toggle, and a wolf fur color
+      picker (plain-color tint on the two fur material surfaces; real fur
+      textures are future work). No persistence across restarts yet.
 - [ ] Hostile wildlife / AI
 - [ ] Currency + progression systems
-- [ ] Open-world level design beyond scattered trees on a flat plane
+- [ ] Rivers/lakes
+- [ ] Player hunger/thirst mechanics
 
 ## Next steps
 
 Roughly in the order they unblock each other:
 
-1. **Hostile wildlife / AI.** Needs at least one enemy type with basic
+1. **Rivers/lakes.** Explicit next step after the trees/bushes/hills pass —
+   nothing exists for water yet (no shader, no volume/trigger for
+   swimming, no lake/river placement). Nature Kit has ground_river_* and
+   platform pieces that could bound a lake; a river cutting through the
+   hilly terrain will need to either carve the heightmap or just overlay
+   a water plane that ignores it.
+2. **Hostile wildlife / AI.** Needs at least one enemy type with basic
    state-machine behavior (idle/patrol → chase → attack) so combat has
    something to actually fight back. The training dummy proved hit
    detection works but doesn't hit back. Could reuse another animal from
    the same Quaternius pack (Fox, Husky, etc. — same rig/animation set,
    including `Idle_HitReact*`/`Death`) as the first enemy, giving it a
    Damageable + its own Hitbox.
-2. **Build a real level from the Nature Kit.** `test_world.tscn` is still
-   a flat plane with a handful of decorative trees. Use the other 300+
-   `assets/models/nature-kit/*.glb` props (rocks, cliffs, paths, water) to
-   build the first real biome with terrain variation.
-3. **Currency + progression.** No systems exist yet. Needs a currency
+3. **Player hunger/thirst mechanics.** Not scoped in detail yet — likely
+   depleting resources restored by eating/drinking in the world, following
+   the same pattern as health/stamina (a resource + HUD element). Ties
+   into the survival pillar and gives rivers/lakes and future foraging
+   actual gameplay purpose beyond scenery.
+4. **Currency + progression.** No systems exist yet. Needs a currency
    resource, a source (kills/exploration per the GDD), and at least one
    spend sink (cosmetic or stat upgrade) to close the loop.
 
