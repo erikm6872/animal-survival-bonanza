@@ -96,7 +96,16 @@ play. Multiplayer is a long-term goal, not a v1 requirement.
       matching `HeightMapShape3D` collision at runtime), replacing the old
       flat plane. `scripts/world/biome_populator.gd` scatters 60 trees and
       80 bushes across it (fixed RNG seed, height-sampled so nothing floats
-      or sinks). Rivers/lakes not started — explicitly next.
+      or sinks), skipping any spot inside the river/ponds.
+- [x] River + two ponds — `TerrainHeight` carves basins that blend smoothly
+      back up to the hill height at each bank (no cliffs), and
+      `scripts/world/water_generator.gd` builds matching visible water (a
+      procedural ribbon mesh for the river's meander, a disk per pond) at
+      the same level the terrain carves toward. Visual/terrain only —
+      no swimming mechanics or water collision yet, so the player can
+      currently walk down into a basin and end up under the water plane
+      (harmless-looking since the water material is double-sided, but not
+      "real" water).
 - [x] Idle/Walk/Gallop animations wired to movement state (walk vs. sprint)
 - [x] Attack animation wired to the `attack` input (left mouse) — plays
       once, blocks movement animations until it finishes
@@ -130,31 +139,31 @@ play. Multiplayer is a long-term goal, not a v1 requirement.
       textures are future work). No persistence across restarts yet.
 - [ ] Hostile wildlife / AI
 - [ ] Currency + progression systems
-- [ ] Rivers/lakes
 - [ ] Player hunger/thirst mechanics
+- [ ] Swimming / water collision (river and ponds are visual-only so far)
 
 ## Next steps
 
 Roughly in the order they unblock each other:
 
-1. **Rivers/lakes.** Explicit next step after the trees/bushes/hills pass —
-   nothing exists for water yet (no shader, no volume/trigger for
-   swimming, no lake/river placement). Nature Kit has ground_river_* and
-   platform pieces that could bound a lake; a river cutting through the
-   hilly terrain will need to either carve the heightmap or just overlay
-   a water plane that ignores it.
-2. **Hostile wildlife / AI.** Needs at least one enemy type with basic
+1. **Hostile wildlife / AI.** Needs at least one enemy type with basic
    state-machine behavior (idle/patrol → chase → attack) so combat has
    something to actually fight back. The training dummy proved hit
    detection works but doesn't hit back. Could reuse another animal from
    the same Quaternius pack (Fox, Husky, etc. — same rig/animation set,
    including `Idle_HitReact*`/`Death`) as the first enemy, giving it a
    Damageable + its own Hitbox.
-3. **Player hunger/thirst mechanics.** Not scoped in detail yet — likely
+2. **Player hunger/thirst mechanics.** Not scoped in detail yet — likely
    depleting resources restored by eating/drinking in the world, following
    the same pattern as health/stamina (a resource + HUD element). Ties
-   into the survival pillar and gives rivers/lakes and future foraging
+   into the survival pillar and gives the river/ponds and future foraging
    actual gameplay purpose beyond scenery.
+3. **Swimming / water collision.** The river/ponds are visual-only —
+   nothing stops the player walking down into a basin and ending up under
+   the water plane. Needs at least a shallow-water slowdown or a real
+   swim state; full swimming-as-a-movement-domain is bigger scope (see
+   "Future ideas") but *some* water interaction is needed even for the
+   ground-based Wolf now that water exists in the world.
 4. **Currency + progression.** No systems exist yet. Needs a currency
    resource, a source (kills/exploration per the GDD), and at least one
    spend sink (cosmetic or stat upgrade) to close the loop.
