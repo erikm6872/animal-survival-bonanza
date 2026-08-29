@@ -3,10 +3,15 @@
 All assets below are CC0 (public domain) — no attribution legally required,
 credited here for provenance.
 
-- **Wolf.gltf** — Quaternius, "Ultimate Animated Animal Pack"
-  (https://quaternius.com/packs/ultimateanimatedanimals.html).
-  Animations: Attack, Death, Eating, Gallop, Gallop_Jump, Idle, Idle_2,
-  Idle_2_HeadLow, Idle_HitReact1, Idle_HitReact2, Jump_ToIdle, Walk.
+- **Wolf.gltf, Stag.gltf** — Quaternius, "Ultimate Animated Animal Pack"
+  (https://quaternius.com/packs/ultimateanimatedanimals.html). Wolf
+  animations: Attack, Death, Eating, Gallop, Gallop_Jump, Idle, Idle_2,
+  Idle_2_HeadLow, Idle_HitReact1, Idle_HitReact2, Jump_ToIdle, Walk. Stag
+  animations: Attack_Headbutt, Attack_Kick, Death, Eating, Gallop,
+  Gallop_Jump, Idle, Idle_2, Idle_Headlow, Idle_HitReact1, Idle_HitReact2,
+  Jump_toIdle, Walk — same pack, similar but not identical clip names, which
+  is why species stats/animation names live in `resources/species/*.tres`
+  rather than being hardcoded.
 - **nature-kit/** — Kenney, "Nature Kit" (https://kenney.nl/assets/nature-kit).
   See `nature-kit/LICENSE.txt`.
 - **fish/** — Quaternius, "Animated Fish Pack"

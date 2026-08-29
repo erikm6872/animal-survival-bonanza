@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="AnimalSpecies" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/player/animal_species.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://assets/models/Wolf.gltf" id="2_model"]
+
+[resource]
+script = ExtResource("1_script")
+display_name = "Wolf"
+model_scene = ExtResource("2_model")
+model_scale = 0.3
+fur_mesh_path = NodePath("AnimalArmature/Skeleton3D/Wolf")
+fur_surfaces = Array[int]([0, 2])
+fur_lighten = Array[float]([0.0, 0.3])
+max_health = 100.0
+attack_damage = 15.0
+walk_speed = 5.0
+sprint_speed = 9.0
+anim_idle = "Idle"
+anim_walk = "Walk"
+anim_gallop = "Gallop"
+anim_attack = "Attack"
+anim_death = "Death"
+anim_dodge = "Gallop_Jump"
+anim_hit_react = Array[String](["Idle_HitReact1", "Idle_HitReact2"])
+hitbox_offset = Vector3(0, 0.5, -0.9)
+attack_hit_start_fraction = 0.41
+attack_hit_end_fraction = 0.64

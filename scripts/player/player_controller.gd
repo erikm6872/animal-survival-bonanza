@@ -1,7 +1,10 @@
 extends CharacterBody3D
 
-@export var walk_speed: float = 5.0
-@export var sprint_speed: float = 9.0
+## Falls back to Wolf if nothing else assigns a species before _ready() runs
+## (e.g. GameState.selected_species from the character select screen) — keeps
+## this scene runnable directly for quick testing.
+@export var species: AnimalSpecies = preload("res://resources/species/wolf_species.tres")
+
 @export var acceleration: float = 12.0
 @export var jump_velocity: float = 4.5
 @export var rotation_speed: float = 10.0
@@ -14,17 +17,17 @@ extends CharacterBody3D
 @onready var camera: Camera3D = $CameraPivot/SpringArm3D/Camera3D
 @onready var spring_arm: SpringArm3D = $CameraPivot/SpringArm3D
 @onready var model: Node3D = $Model
-@onready var anim_player: AnimationPlayer = $Model/Wolf/AnimationPlayer
 @onready var hitbox: Hitbox = $Model/Hitbox
+@onready var hitbox_shape: CollisionShape3D = $Model/Hitbox/CollisionShape3D
 @onready var damageable: Damageable = $Damageable
 @onready var stamina: Stamina = $Stamina
 @onready var hud: PlayerHUD = $PlayerHUD
-@onready var wolf_mesh: MeshInstance3D = $Model/Wolf/AnimalArmature/Skeleton3D/Wolf
 
-# Surface indices on the Wolf mesh (see assets/models/Wolf.gltf). Only the fur
-# surfaces get tinted — Nose (1) and Eyes_Black (3) stay put.
-const FUR_MAIN_SURFACE: int = 0
-const FUR_LIGHT_SURFACE: int = 2
+var anim_player: AnimationPlayer
+var fur_mesh: MeshInstance3D
+
+var walk_speed: float
+var sprint_speed: float
 
 var gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
 var camera_pitch: float = 0.0
@@ -34,12 +37,9 @@ var camera_pitch: float = 0.0
 var camera_distances: Array[float] = []
 var camera_distance_index: int = 0
 
-# The Attack clip has no keyframes between these two points (0.6-0.8s) — the
-# bite lunge — so that's the window the hitbox is live for.
-const ATTACK_HIT_START: float = 0.55
-const ATTACK_HIT_END: float = 0.85
+var attack_hit_start: float
+var attack_hit_end: float
 
-const HIT_REACT_ANIMS: Array[String] = ["Idle_HitReact1", "Idle_HitReact2"]
 const DEATH_RESPAWN_DELAY: float = 3.0
 
 const ATTACK_STAMINA_COST: float = 15.0
@@ -48,7 +48,6 @@ const SPRINT_STAMINA_DRAIN_RATE: float = 25.0 ## per second, while actively spri
 const DODGE_STAMINA_COST: float = 25.0
 const DODGE_SPEED: float = 14.0
 const DODGE_DURATION: float = 0.6 ## also how long the i-frames last
-const DODGE_ANIM: String = "Gallop_Jump" ## has a tucked-legs pose, reads better mid-roll than Gallop
 # The roll pivots around the model's origin, which sits at ground level (feet),
 # so without this the body sweeps below the floor as it rotates through
 # upside-down. This arcs it up and back down over the roll instead — also
@@ -67,16 +66,32 @@ var dodge_time: float = 0.0
 var dodge_direction: Vector3 = Vector3.ZERO
 
 func _ready() -> void:
+	if GameState.selected_species:
+		species = GameState.selected_species
+
+	_spawn_model()
+
 	global_position.y = TerrainHeight.get_height(global_position.x, global_position.z) + 1.0
 
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
-	# The pack's animations import with loop_mode off; movement loops need it on.
-	anim_player.get_animation("Idle").loop_mode = Animation.LOOP_LINEAR
-	anim_player.get_animation("Walk").loop_mode = Animation.LOOP_LINEAR
-	anim_player.get_animation("Gallop").loop_mode = Animation.LOOP_LINEAR
-	anim_player.play("Idle")
-	anim_player.animation_finished.connect(_on_animation_finished)
+
+	walk_speed = species.walk_speed
+	sprint_speed = species.sprint_speed
+	damageable.max_health = species.max_health
+	damageable.current_health = species.max_health
+	hitbox.damage = species.attack_damage
 	hitbox.owner_body = self
+
+	# The pack's animations import with loop_mode off; movement loops need it on.
+	anim_player.get_animation(species.anim_idle).loop_mode = Animation.LOOP_LINEAR
+	anim_player.get_animation(species.anim_walk).loop_mode = Animation.LOOP_LINEAR
+	anim_player.get_animation(species.anim_gallop).loop_mode = Animation.LOOP_LINEAR
+	anim_player.play(species.anim_idle)
+	anim_player.animation_finished.connect(_on_animation_finished)
+
+	var attack_length := anim_player.get_animation(species.anim_attack).length
+	attack_hit_start = attack_length * species.attack_hit_start_fraction
+	attack_hit_end = attack_length * species.attack_hit_end_fraction
 
 	damageable.damaged.connect(_on_damaged)
 	damageable.died.connect(_on_died)
@@ -88,12 +103,37 @@ func _ready() -> void:
 	var far_distance := spring_arm.spring_length
 	camera_distances = [far_distance, far_distance * 2.0 / 3.0, far_distance / 3.0]
 
+func _spawn_model() -> void:
+	var instance: Node3D = species.model_scene.instantiate()
+	model.add_child(instance)
+	# Packs face +Z by default; flip X/Z to match this project's -Z-forward
+	# movement convention (see docs/GDD.md).
+	instance.transform = Transform3D(Basis.IDENTITY.scaled(Vector3(-species.model_scale, species.model_scale, -species.model_scale)), Vector3.ZERO)
+
+	anim_player = _find_animation_player(instance)
+	if species.fur_mesh_path != NodePath(""):
+		fur_mesh = instance.get_node(species.fur_mesh_path)
+
+	hitbox.transform = Transform3D(Basis.IDENTITY, species.hitbox_offset)
+	var sphere := SphereShape3D.new()
+	sphere.radius = 0.35
+	hitbox_shape.shape = sphere
+
+func _find_animation_player(node: Node) -> AnimationPlayer:
+	for child in node.get_children():
+		if child is AnimationPlayer:
+			return child
+		var found := _find_animation_player(child)
+		if found:
+			return found
+	return null
+
 func _on_animation_finished(anim_name: StringName) -> void:
-	if anim_name == "Attack":
+	if anim_name == species.anim_attack:
 		is_attacking = false
 		hitbox_open = false
 		hitbox.deactivate()
-	elif anim_name in HIT_REACT_ANIMS:
+	elif anim_name in species.anim_hit_react:
 		is_hit_reacting = false
 
 func _on_damaged(_amount: float, _source: Node) -> void:
@@ -104,7 +144,7 @@ func _on_damaged(_amount: float, _source: Node) -> void:
 	is_attacking = false
 	hitbox_open = false
 	hitbox.deactivate()
-	anim_player.play(HIT_REACT_ANIMS.pick_random())
+	anim_player.play(species.anim_hit_react.pick_random())
 
 func _on_died(_source: Node) -> void:
 	is_dead = true
@@ -114,33 +154,37 @@ func _on_died(_source: Node) -> void:
 	damageable.is_invulnerable = false
 	hitbox_open = false
 	hitbox.deactivate()
-	anim_player.play("Death")
+	anim_player.play(species.anim_death)
 	await get_tree().create_timer(DEATH_RESPAWN_DELAY).timeout
 	_respawn()
 
 ## Plain-color tint for now; a real fur texture can replace this later without
 ## changing the caller (pause menu) — it only knows about get/set color.
 func set_fur_color(color: Color) -> void:
-	var main_mat := StandardMaterial3D.new()
-	main_mat.albedo_color = color
-	wolf_mesh.set_surface_override_material(FUR_MAIN_SURFACE, main_mat)
-
-	var light_mat := StandardMaterial3D.new()
-	light_mat.albedo_color = color.lerp(Color.WHITE, 0.3)
-	wolf_mesh.set_surface_override_material(FUR_LIGHT_SURFACE, light_mat)
+	if not fur_mesh:
+		return
+	for i in species.fur_surfaces.size():
+		var surface: int = species.fur_surfaces[i]
+		var lighten: float = species.fur_lighten[i] if i < species.fur_lighten.size() else 0.0
+		var mat := StandardMaterial3D.new()
+		mat.albedo_color = color.lerp(Color.WHITE, lighten)
+		fur_mesh.set_surface_override_material(surface, mat)
 
 func get_fur_color() -> Color:
-	var override := wolf_mesh.get_surface_override_material(FUR_MAIN_SURFACE)
+	if not fur_mesh or species.fur_surfaces.is_empty():
+		return Color.WHITE
+	var main_surface: int = species.fur_surfaces[0]
+	var override := fur_mesh.get_surface_override_material(main_surface)
 	if override:
 		return override.albedo_color
-	return wolf_mesh.mesh.surface_get_material(FUR_MAIN_SURFACE).albedo_color
+	return fur_mesh.mesh.surface_get_material(main_surface).albedo_color
 
 func _respawn() -> void:
 	damageable.current_health = damageable.max_health
 	damageable.is_dead = false
 	is_dead = false
 	hud.update_health(damageable.current_health, damageable.max_health)
-	anim_player.play("Idle")
+	anim_player.play(species.anim_idle)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("cycle_camera_distance"):
@@ -191,8 +235,8 @@ func _physics_process(delta: float) -> void:
 		dodge_time = 0.0
 		dodge_direction = move_dir.normalized() if move_dir.length() > 0.1 else -forward
 		damageable.is_invulnerable = true
-		var dodge_anim_speed := anim_player.get_animation(DODGE_ANIM).length / DODGE_DURATION
-		anim_player.play(DODGE_ANIM, -1, dodge_anim_speed)
+		var dodge_anim_speed := anim_player.get_animation(species.anim_dodge).length / DODGE_DURATION
+		anim_player.play(species.anim_dodge, -1, dodge_anim_speed)
 
 	if is_dodging:
 		dodge_time += delta
@@ -216,14 +260,14 @@ func _physics_process(delta: float) -> void:
 			and stamina.try_spend(ATTACK_STAMINA_COST):
 		is_attacking = true
 		attack_time = 0.0
-		anim_player.play("Attack")
+		anim_player.play(species.anim_attack)
 
 	if is_attacking:
 		attack_time += delta
-		if not hitbox_open and attack_time >= ATTACK_HIT_START and attack_time < ATTACK_HIT_END:
+		if not hitbox_open and attack_time >= attack_hit_start and attack_time < attack_hit_end:
 			hitbox_open = true
 			hitbox.activate()
-		elif hitbox_open and attack_time >= ATTACK_HIT_END:
+		elif hitbox_open and attack_time >= attack_hit_end:
 			hitbox_open = false
 			hitbox.deactivate()
 
@@ -241,8 +285,8 @@ func _physics_process(delta: float) -> void:
 		var target_angle := atan2(-move_dir.x, -move_dir.z)
 		model.rotation.y = lerp_angle(model.rotation.y, target_angle, rotation_speed * delta)
 		if not is_attacking and not is_hit_reacting:
-			anim_player.play("Gallop" if is_sprinting else "Walk")
+			anim_player.play(species.anim_gallop if is_sprinting else species.anim_walk)
 	elif not is_attacking and not is_hit_reacting:
-		anim_player.play("Idle")
+		anim_player.play(species.anim_idle)
 
 	move_and_slide()
