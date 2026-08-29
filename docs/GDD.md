@@ -31,13 +31,22 @@ play. Multiplayer is a long-term goal, not a v1 requirement.
 
 ## Animal roster
 
-- **v1 scope:** one fully-featured animal, polished — movement, combat,
-  and progression all built around it before adding more species.
-- Future species should feel mechanically distinct (not just reskins),
-  but that's explicitly out of scope until v1's single animal is fun.
-- Longer-term, "mechanically distinct" likely means different *movement
-  domains* entirely (flight, swimming), not just different ground-based
-  stats — see "Future ideas" below.
+- Two playable animals now, chosen from a character select screen at
+  launch: **Wolf** (100 HP, 15 damage, 5/9 walk/sprint) and **Stag** (150
+  HP, 25 damage, 4/7 walk/sprint) — a tankier-but-slower archetype, same
+  stat shape originally scoped for a bear. No CC0 rigged bear was found
+  (see `docs/GDD.md` history / commit `4dd5420` for the search); the Stag
+  reuses the same Quaternius pack as the Wolf instead.
+- Species are data-driven (`scripts/player/animal_species.gd`,
+  `resources/species/*.tres`) — model, stats, animation clip names, fur
+  tint config, and hitbox timing all live in the resource, not in
+  `player_controller.gd`. Adding a species is a new `.tres` file, not a
+  code change (as long as the model has a comparable animation set).
+- Future species should still feel mechanically distinct beyond stats
+  where it makes sense — see "Future ideas" below for the bigger swings
+  (flight, swimming) that are a different scope entirely from what the
+  current data-driven system supports (it only varies stats/animations
+  on the same ground-based CharacterBody3D movement model).
 
 ## Combat
 
@@ -84,8 +93,9 @@ play. Multiplayer is a long-term goal, not a v1 requirement.
 - [x] Project scaffold, folder structure, license, README
 - [x] Basic third-person character controller (WASD + mouse-look, sprint,
       jump) — `scripts/player/player_controller.gd`
-- [x] Wolf model (Quaternius, CC0) swapped in as the v1 playable animal —
-      `assets/models/Wolf.gltf`, wired into `scenes/player/player.tscn`
+- [x] Two playable animals via a data-driven species system — see "Animal
+      roster" above. Character select (`scenes/ui/character_select.tscn`)
+      is now the game's main scene.
 - [x] Kenney Nature Kit (CC0) imported for environment art —
       `assets/models/nature-kit/` (329 props: trees, rocks, fences, paths,
       etc.), trees/bushes now used by the biome (below); rocks/cliffs/paths
@@ -139,9 +149,10 @@ play. Multiplayer is a long-term goal, not a v1 requirement.
       Costs stamina like attack; mutually exclusive with attack/hit-react.
 - [x] Pause menu (`Esc`) — Resume/Settings/Quit, autoloaded
       (`scripts/ui/pause_menu.gd`), pauses via `get_tree().paused`.
-      Settings: mouse sensitivity, fullscreen toggle, and a wolf fur color
-      picker (plain-color tint on the two fur material surfaces; real fur
-      textures are future work). No persistence across restarts yet.
+      Settings: mouse sensitivity, fullscreen toggle, and a fur color
+      picker (plain-color tint on the active species' fur surfaces, per
+      `AnimalSpecies.fur_surfaces`; real fur textures are future work).
+      No persistence across restarts yet.
 - [ ] Hostile wildlife / AI
 - [ ] Currency + progression systems
 - [ ] Player hunger/thirst mechanics

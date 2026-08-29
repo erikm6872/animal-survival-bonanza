@@ -133,7 +133,7 @@ theme_override_constants/separation = 10
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(1, 1, 1, 1)
-text = "Wolf Color"
+text = "Fur Color"
 
 [node name="WolfColorPicker" type="ColorPickerButton" parent="SettingsPanel/PanelContainer/MarginContainer/VBoxContainer/WolfColorRow"]
 custom_minimum_size = Vector2(60, 28)
