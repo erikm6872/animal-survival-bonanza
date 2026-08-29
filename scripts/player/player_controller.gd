@@ -19,6 +19,12 @@ extends CharacterBody3D
 @onready var damageable: Damageable = $Damageable
 @onready var stamina: Stamina = $Stamina
 @onready var hud: PlayerHUD = $PlayerHUD
+@onready var wolf_mesh: MeshInstance3D = $Model/Wolf/AnimalArmature/Skeleton3D/Wolf
+
+# Surface indices on the Wolf mesh (see assets/models/Wolf.gltf). Only the fur
+# surfaces get tinted — Nose (1) and Eyes_Black (3) stay put.
+const FUR_MAIN_SURFACE: int = 0
+const FUR_LIGHT_SURFACE: int = 2
 
 var gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
 var camera_pitch: float = 0.0
@@ -109,6 +115,23 @@ func _on_died(_source: Node) -> void:
 	anim_player.play("Death")
 	await get_tree().create_timer(DEATH_RESPAWN_DELAY).timeout
 	_respawn()
+
+## Plain-color tint for now; a real fur texture can replace this later without
+## changing the caller (pause menu) — it only knows about get/set color.
+func set_fur_color(color: Color) -> void:
+	var main_mat := StandardMaterial3D.new()
+	main_mat.albedo_color = color
+	wolf_mesh.set_surface_override_material(FUR_MAIN_SURFACE, main_mat)
+
+	var light_mat := StandardMaterial3D.new()
+	light_mat.albedo_color = color.lerp(Color.WHITE, 0.3)
+	wolf_mesh.set_surface_override_material(FUR_LIGHT_SURFACE, light_mat)
+
+func get_fur_color() -> Color:
+	var override := wolf_mesh.get_surface_override_material(FUR_MAIN_SURFACE)
+	if override:
+		return override.albedo_color
+	return wolf_mesh.mesh.surface_get_material(FUR_MAIN_SURFACE).albedo_color
 
 func _respawn() -> void:
 	damageable.current_health = damageable.max_health

@@ -7,6 +7,7 @@ extends CanvasLayer
 @onready var quit_button: Button = $MenuPanel/PanelContainer/MarginContainer/VBoxContainer/QuitButton
 @onready var sensitivity_slider: HSlider = $SettingsPanel/PanelContainer/MarginContainer/VBoxContainer/SensitivityRow/SensitivitySlider
 @onready var fullscreen_button: Button = $SettingsPanel/PanelContainer/MarginContainer/VBoxContainer/FullscreenRow/FullscreenButton
+@onready var wolf_color_picker: ColorPickerButton = $SettingsPanel/PanelContainer/MarginContainer/VBoxContainer/WolfColorRow/WolfColorPicker
 @onready var back_button: Button = $SettingsPanel/PanelContainer/MarginContainer/VBoxContainer/BackButton
 
 var is_paused: bool = false
@@ -23,6 +24,7 @@ func _ready() -> void:
 	back_button.pressed.connect(_on_back_pressed)
 	sensitivity_slider.value_changed.connect(_on_sensitivity_changed)
 	fullscreen_button.toggled.connect(_on_fullscreen_toggled)
+	wolf_color_picker.color_changed.connect(_on_wolf_color_changed)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if not event.is_action_pressed("ui_cancel"):
@@ -52,6 +54,8 @@ func _on_settings_pressed() -> void:
 	var is_fullscreen := DisplayServer.window_get_mode() == DisplayServer.WINDOW_MODE_FULLSCREEN
 	fullscreen_button.set_pressed_no_signal(is_fullscreen)
 	fullscreen_button.text = "On" if is_fullscreen else "Off"
+	if player:
+		wolf_color_picker.color = player.get_fur_color()
 
 func _on_back_pressed() -> void:
 	settings_panel.visible = false
@@ -70,3 +74,8 @@ func _on_fullscreen_toggled(is_fullscreen: bool) -> void:
 		DisplayServer.WINDOW_MODE_FULLSCREEN if is_fullscreen else DisplayServer.WINDOW_MODE_WINDOWED
 	)
 	fullscreen_button.text = "On" if is_fullscreen else "Off"
+
+func _on_wolf_color_changed(color: Color) -> void:
+	var player := get_tree().get_first_node_in_group("player")
+	if player:
+		player.set_fur_color(color)

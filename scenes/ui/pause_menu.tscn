@@ -73,9 +73,9 @@ anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -150.0
-offset_top = -115.0
+offset_top = -140.0
 offset_right = 150.0
-offset_bottom = 115.0
+offset_bottom = 140.0
 theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
 
 [node name="MarginContainer" type="MarginContainer" parent="SettingsPanel/PanelContainer"]
@@ -124,6 +124,21 @@ text = "Fullscreen"
 layout_mode = 2
 toggle_mode = true
 text = "Off"
+
+[node name="WolfColorRow" type="HBoxContainer" parent="SettingsPanel/PanelContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="WolfColorLabel" type="Label" parent="SettingsPanel/PanelContainer/MarginContainer/VBoxContainer/WolfColorRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+text = "Wolf Color"
+
+[node name="WolfColorPicker" type="ColorPickerButton" parent="SettingsPanel/PanelContainer/MarginContainer/VBoxContainer/WolfColorRow"]
+custom_minimum_size = Vector2(60, 28)
+layout_mode = 2
+edit_alpha = false
 
 [node name="BackButton" type="Button" parent="SettingsPanel/PanelContainer/MarginContainer/VBoxContainer"]
 layout_mode = 2
