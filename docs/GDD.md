@@ -106,6 +106,11 @@ play. Multiplayer is a long-term goal, not a v1 requirement.
       currently walk down into a basin and end up under the water plane
       (harmless-looking since the water material is double-sided, but not
       "real" water).
+- [x] Ambient fish — `scripts/world/fish.gd` (wander within a circular area,
+      loop the Swim animation), `scripts/world/fish_spawner.gd` (5 per pond,
+      5x3 along the river). Three species from Quaternius's Animated Fish
+      Pack (CC0, FBX) in `assets/models/fish/`. Decorative only — not
+      huntable/interactable yet.
 - [x] Idle/Walk/Gallop animations wired to movement state (walk vs. sprint)
 - [x] Attack animation wired to the `attack` input (left mouse) — plays
       once, blocks movement animations until it finishes
