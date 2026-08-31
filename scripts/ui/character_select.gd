@@ -3,6 +3,7 @@ extends CanvasLayer
 const SPECIES_PATHS: Array[String] = [
 	"res://resources/species/wolf_species.tres",
 	"res://resources/species/stag_species.tres",
+	"res://resources/species/sparrow_species.tres",
 ]
 
 @onready var card_container: VBoxContainer = $PanelContainer/MarginContainer/VBoxContainer/CardContainer

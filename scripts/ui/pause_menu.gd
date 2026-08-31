@@ -4,9 +4,11 @@ extends CanvasLayer
 @onready var settings_panel: Control = $SettingsPanel
 @onready var resume_button: Button = $MenuPanel/PanelContainer/MarginContainer/VBoxContainer/ResumeButton
 @onready var settings_button: Button = $MenuPanel/PanelContainer/MarginContainer/VBoxContainer/SettingsButton
+@onready var change_animal_button: Button = $MenuPanel/PanelContainer/MarginContainer/VBoxContainer/ChangeAnimalButton
 @onready var quit_button: Button = $MenuPanel/PanelContainer/MarginContainer/VBoxContainer/QuitButton
 @onready var sensitivity_slider: HSlider = $SettingsPanel/PanelContainer/MarginContainer/VBoxContainer/SensitivityRow/SensitivitySlider
 @onready var fullscreen_button: Button = $SettingsPanel/PanelContainer/MarginContainer/VBoxContainer/FullscreenRow/FullscreenButton
+@onready var season_button: Button = $SettingsPanel/PanelContainer/MarginContainer/VBoxContainer/SeasonRow/SeasonButton
 @onready var wolf_color_picker: ColorPickerButton = $SettingsPanel/PanelContainer/MarginContainer/VBoxContainer/WolfColorRow/WolfColorPicker
 @onready var back_button: Button = $SettingsPanel/PanelContainer/MarginContainer/VBoxContainer/BackButton
 
@@ -20,10 +22,12 @@ func _ready() -> void:
 
 	resume_button.pressed.connect(_on_resume_pressed)
 	settings_button.pressed.connect(_on_settings_pressed)
+	change_animal_button.pressed.connect(_on_change_animal_pressed)
 	quit_button.pressed.connect(_on_quit_pressed)
 	back_button.pressed.connect(_on_back_pressed)
 	sensitivity_slider.value_changed.connect(_on_sensitivity_changed)
 	fullscreen_button.toggled.connect(_on_fullscreen_toggled)
+	season_button.toggled.connect(_on_season_toggled)
 	wolf_color_picker.color_changed.connect(_on_wolf_color_changed)
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -54,12 +58,21 @@ func _on_settings_pressed() -> void:
 	var is_fullscreen := DisplayServer.window_get_mode() == DisplayServer.WINDOW_MODE_FULLSCREEN
 	fullscreen_button.set_pressed_no_signal(is_fullscreen)
 	fullscreen_button.text = "On" if is_fullscreen else "Off"
+	season_button.set_pressed_no_signal(GameState.is_winter)
+	season_button.text = "On" if GameState.is_winter else "Off"
 	if player:
 		wolf_color_picker.color = player.get_fur_color()
 
 func _on_back_pressed() -> void:
 	settings_panel.visible = false
 	menu_panel.visible = true
+
+## Reuses the character select flow instead of a dedicated "switch species"
+## path — it already does exactly this (set GameState.selected_species, load
+## test_world.tscn) whenever it's entered, whether that's from launch or here.
+func _on_change_animal_pressed() -> void:
+	set_paused(false)
+	get_tree().change_scene_to_file("res://scenes/ui/character_select.tscn")
 
 func _on_quit_pressed() -> void:
 	get_tree().quit()
@@ -74,6 +87,10 @@ func _on_fullscreen_toggled(is_fullscreen: bool) -> void:
 		DisplayServer.WINDOW_MODE_FULLSCREEN if is_fullscreen else DisplayServer.WINDOW_MODE_WINDOWED
 	)
 	fullscreen_button.text = "On" if is_fullscreen else "Off"
+
+func _on_season_toggled(is_winter: bool) -> void:
+	GameState.set_winter(is_winter)
+	season_button.text = "On" if is_winter else "Off"
 
 func _on_wolf_color_changed(color: Color) -> void:
 	var player := get_tree().get_first_node_in_group("player")

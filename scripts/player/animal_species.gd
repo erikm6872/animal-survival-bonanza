@@ -9,6 +9,13 @@ class_name AnimalSpecies
 @export var display_name: String = ""
 @export var model_scene: PackedScene
 @export var model_scale: float = 0.3
+## Which scene/controller spawns this species — most species share the
+## ground-based one; flight (or future movement types) just point here
+## instead. Same stats/animation fields below still apply to both. Every
+## species resource sets this explicitly (no default here — that would
+## make this script preload player.tscn, which preloads a species resource
+## of this same class, a real circular dependency).
+@export var player_scene: PackedScene
 
 ## Path (relative to the instanced model's root) to the MeshInstance3D whose
 ## surfaces get tinted by the fur color picker. Empty = no fur tinting.
@@ -32,6 +39,11 @@ class_name AnimalSpecies
 @export var anim_death: String = "Death"
 @export var anim_dodge: String = "Gallop_Jump"
 @export var anim_hit_react: Array[String] = ["Idle_HitReact1", "Idle_HitReact2"]
+## Flight-only: played while landed and standing still / hopping along the
+## ground. Empty = species doesn't support landing (falls back to
+## anim_idle/anim_walk), which is fine for every ground species.
+@export var anim_ground_idle: String = ""
+@export var anim_hop: String = ""
 
 @export_group("Combat")
 @export var hitbox_offset: Vector3 = Vector3(0, 0.5, -0.9)

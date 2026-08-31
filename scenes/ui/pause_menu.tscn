@@ -59,6 +59,10 @@ text = "Resume"
 layout_mode = 2
 text = "Settings"
 
+[node name="ChangeAnimalButton" type="Button" parent="MenuPanel/PanelContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Change Animal"
+
 [node name="QuitButton" type="Button" parent="MenuPanel/PanelContainer/MarginContainer/VBoxContainer"]
 layout_mode = 2
 text = "Quit"
@@ -121,6 +125,21 @@ theme_override_colors/font_color = Color(1, 1, 1, 1)
 text = "Fullscreen"
 
 [node name="FullscreenButton" type="Button" parent="SettingsPanel/PanelContainer/MarginContainer/VBoxContainer/FullscreenRow"]
+layout_mode = 2
+toggle_mode = true
+text = "Off"
+
+[node name="SeasonRow" type="HBoxContainer" parent="SettingsPanel/PanelContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="SeasonLabel" type="Label" parent="SettingsPanel/PanelContainer/MarginContainer/VBoxContainer/SeasonRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+text = "Winter"
+
+[node name="SeasonButton" type="Button" parent="SettingsPanel/PanelContainer/MarginContainer/VBoxContainer/SeasonRow"]
 layout_mode = 2
 toggle_mode = true
 text = "Off"

@@ -19,8 +19,8 @@ const BUSH_SCENES: Array[String] = [
 	"res://assets/models/nature-kit/plant_bushTriangle.glb",
 ]
 
-@export var tree_count: int = 60
-@export var bush_count: int = 80
+@export var tree_count: int = 220
+@export var bush_count: int = 100
 @export var play_area_half_size: float = 90.0
 @export var safe_zone_radius: float = 10.0 ## keep clear around spawn/dummy
 @export var rng_seed: int = 20260827

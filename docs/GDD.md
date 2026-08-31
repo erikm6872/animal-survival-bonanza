@@ -31,17 +31,68 @@ play. Multiplayer is a long-term goal, not a v1 requirement.
 
 ## Animal roster
 
-- Two playable animals now, chosen from a character select screen at
-  launch: **Wolf** (100 HP, 15 damage, 5/9 walk/sprint) and **Stag** (150
+- Three playable animals now, chosen from a character select screen at
+  launch: **Wolf** (100 HP, 15 damage, 5/9 walk/sprint), **Stag** (150
   HP, 25 damage, 4/7 walk/sprint) — a tankier-but-slower archetype, same
   stat shape originally scoped for a bear. No CC0 rigged bear was found
   (see `docs/GDD.md` history / commit `4dd5420` for the search); the Stag
-  reuses the same Quaternius pack as the Wolf instead.
+  reuses the same Quaternius pack as the Wolf instead — and **Sparrow**
+  (60 HP, 10 damage, 8/16 cruise/fast), the first flying species (see
+  "Flight" below).
 - Species are data-driven (`scripts/player/animal_species.gd`,
   `resources/species/*.tres`) — model, stats, animation clip names, fur
   tint config, and hitbox timing all live in the resource, not in
   `player_controller.gd`. Adding a species is a new `.tres` file, not a
   code change (as long as the model has a comparable animation set).
+  A species now also names its own player scene (`player_scene`, ground
+  vs. flight controller) via `scripts/world/player_spawner.gd`, which
+  instances whichever one the chosen species points to at spawn time
+  instead of the level embedding a fixed player scene.
+
+## Flight
+
+- `scripts/player/flight_controller.gd` is a separate controller from
+  `player_controller.gd`, not a branch inside it — full 3D movement (no
+  gravity, no floor, pitch+yaw via `Basis.looking_at`/`slerp` instead of
+  yaw-only `lerp_angle`) is different enough that forcing it into the
+  ground controller would mean branching almost every line of
+  `_physics_process`. Shares the same component wiring (Damageable,
+  Stamina, Hitbox, HUD, camera rig) and the `AnimalSpecies` schema, so
+  species resources and the pause menu's mouse-sensitivity/fur-color
+  calls work identically regardless of which controller is spawned.
+  `_clamp_above_ground()` is the only real "floor" — a minimum clearance
+  above `TerrainHeight` so the bird can't fly underground.
+- No CC0 or commercial-use-safe rigged/animated bird asset could be
+  found — Quaternius's animal packs (Ultimate Animated Animals, Farm
+  Animal Pack) have no birds at all, and their Monsters pack's only
+  flying options are fantasy creatures (its "Pigeon" is a purple
+  tentacled blob-monster, not a bird). The best real bird found was
+  CC-BY on Sketchfab but downloads are gated behind an account login.
+  So the Sparrow model is built procedurally
+  (`scripts/player/simple_bird_model.gd`) from primitive meshes
+  (capsule body, sphere head, cone beak, prism tail, two swept-back box
+  wings) with code-driven wing-flap animation (`AnimationPlayer`
+  built at runtime, value tracks on the wing pivots' `rotation:z`) —
+  the same approach already used for the terrain/water/fish, rather than
+  an imported model. Reuses the same `AnimalSpecies.anim_*` field names
+  as the imported species (`Flying_Idle`, `Fast_Flying`, `Headbutt`,
+  `Death`, `HitReact`) so nothing else in the species system needed to
+  change. Fur tinting is unsupported for this species (`fur_mesh_path`
+  left empty) since it has no single tintable surface the way Wolf/Stag
+  do.
+- Landing — `Space` toggles between flying and landed, but only when
+  within `LAND_MAX_HEIGHT` of the ground (no landing from high altitude).
+  Landed switches to real gravity + `is_on_floor()`/`move_and_slide()`
+  floor collision (like the ground species) instead of the no-gravity
+  hover model, flattens movement input to the horizontal plane so
+  looking up/down doesn't tilt the hop direction, and plays
+  `anim_ground_idle`/`anim_hop` (`Ground_Idle`/`Hop` for the Sparrow —
+  wings folded, no flap) instead of the flying idle/gallop clips.
+  `_level_model_orientation()` snaps any dive pitch back to level the
+  moment it lands, since `_face_direction`'s slerp would otherwise only
+  correct it gradually (and not at all while standing still). Pressing
+  `Space` again gives an upward `TAKEOFF_VELOCITY` burst and resumes
+  normal flight physics.
 - Future species should still feel mechanically distinct beyond stats
   where it makes sense — see "Future ideas" below for the bigger swings
   (flight, swimming) that are a different scope entirely from what the
@@ -93,9 +144,12 @@ play. Multiplayer is a long-term goal, not a v1 requirement.
 - [x] Project scaffold, folder structure, license, README
 - [x] Basic third-person character controller (WASD + mouse-look, sprint,
       jump) — `scripts/player/player_controller.gd`
-- [x] Two playable animals via a data-driven species system — see "Animal
+- [x] Three playable animals via a data-driven species system — see "Animal
       roster" above. Character select (`scenes/ui/character_select.tscn`)
       is now the game's main scene.
+- [x] Flight (Sparrow) — see "Flight" above. Full 3D movement, its own
+      controller, a procedurally-built bird model since no usable bird
+      asset could be sourced.
 - [x] Kenney Nature Kit (CC0) imported for environment art —
       `assets/models/nature-kit/` (329 props: trees, rocks, fences, paths,
       etc.), trees/bushes now used by the biome (below); rocks/cliffs/paths
@@ -104,15 +158,45 @@ play. Multiplayer is a long-term goal, not a v1 requirement.
       (layered FastNoiseLite, the single source of truth for ground height
       at any x/z), `scripts/world/terrain_generator.gd` (builds the mesh +
       matching `HeightMapShape3D` collision at runtime), replacing the old
-      flat plane. `scripts/world/biome_populator.gd` scatters 60 trees and
-      80 bushes across it (fixed RNG seed, height-sampled so nothing floats
+      flat plane. `scripts/world/biome_populator.gd` scatters 220 trees and
+      100 bushes across it (fixed RNG seed, height-sampled so nothing floats
       or sinks), skipping any spot inside the river/ponds.
-- [x] River + two ponds — `TerrainHeight` carves basins that blend smoothly
-      back up to the hill height at each bank (no cliffs), and
-      `scripts/world/water_generator.gd` builds matching visible water (a
-      procedural ribbon mesh for the river's meander, a disk per pond) at
-      the same level the terrain carves toward. Visual/terrain only —
-      no swimming mechanics or water collision yet, so the player can
+- [x] Mountains surrounding the map — `TerrainHeight._mountain_height()`
+      ramps ridged noise in by radial distance from the map center, only
+      past `MOUNTAIN_START_RADIUS` (65), so the playable area (trees scatter
+      out to radius 90) stays untouched and just the outer ring rises into
+      jagged peaks up to `MOUNTAIN_MAX_HEIGHT` (45). `terrain_generator.gd`
+      colors the mesh by height (vertex colors: grass → rock → snow) so it
+      reads as real mountains instead of giant green hills.
+- [x] River + two ponds + a waterfall — `TerrainHeight` carves basins that
+      blend smoothly back up to the hill height at each bank (no cliffs),
+      and `scripts/world/water_generator.gd` builds matching visible water
+      (a procedural ribbon mesh for the river's meander, a disk per pond) at
+      the same level the terrain carves toward. Past `WATERFALL_X` (80,
+      inside the mountain ring) the river is a second, higher-elevation
+      ribbon — a separate flat "source" stretch coming down out of the
+      mountains — with a steep sloped ribbon bridging the two flat levels
+      (same ribbon construction as the river itself, just over a short,
+      finely-subdivided span): the waterfall. `_carve_water()` picks
+      whichever water level applies based on x, so the actual terrain (and
+      its collision) has a real gorge/cliff there, not just a floating
+      visual seam. Three broken attempts before landing on this: a single
+      flat quad placed exactly at `WATERFALL_X` ended up behind the
+      terrain's own carved cliff face from the valley side (invisible); a
+      crossed pair of quads fixed that but, having no connection to the
+      surrounding water, read as a stray floating shard from most angles
+      instead of falling water; and an eased (smoothstep) rise across a
+      wide span dipped below the terrain's own ramp partway through and got
+      buried again. `WATERFALL_X` lands exactly on a terrain grid vertex
+      (`WATERFALL_RISE_WIDTH` matches `terrain_generator.gd`'s `CELL_SIZE`),
+      so the terrain's rendered surface between the low and high beds is
+      just the one straight line connecting those two vertices — matching
+      that with a **linear** (not eased) rise, offset by the same
+      `RIVER_BED_DEPTH` every other stretch of water sits above its bed,
+      keeps the ribbon parallel to and above the ground the whole way, the
+      same relationship the flat river/pond water already has to its bed.
+      Visual/terrain only — no
+      swimming mechanics or water collision yet, so the player can
       currently walk down into a basin and end up under the water plane
       (harmless-looking since the water material is double-sided, but not
       "real" water).
@@ -147,10 +231,17 @@ play. Multiplayer is a long-term goal, not a v1 requirement.
       granting `Damageable.is_invulnerable` for the same window. No
       dedicated dodge clip in the pack, so it reuses Gallop visually.
       Costs stamina like attack; mutually exclusive with attack/hit-react.
-- [x] Pause menu (`Esc`) — Resume/Settings/Quit, autoloaded
-      (`scripts/ui/pause_menu.gd`), pauses via `get_tree().paused`.
-      Settings: mouse sensitivity, fullscreen toggle, and a fur color
-      picker (plain-color tint on the active species' fur surfaces, per
+- [x] Pause menu (`Esc`) — Resume/Settings/Change Animal/Quit, autoloaded
+      (`scripts/ui/pause_menu.gd`), pauses via `get_tree().paused`. Change
+      Animal reuses the character-select flow (`change_scene_to_file` back
+      to `character_select.tscn`, which already does the "pick a species,
+      load test_world.tscn" flow on its own) so switching species no longer
+      means closing and relaunching the app. Settings: mouse sensitivity,
+      fullscreen toggle, a Winter toggle (swaps the terrain's vertex-color
+      palette between grass/summer and snow/winter via
+      `GameState.season_changed` — geometry is unchanged, only
+      `terrain_generator.gd`'s re-coloring), and a fur color picker
+      (plain-color tint on the active species' fur surfaces, per
       `AnimalSpecies.fur_surfaces`; real fur textures are future work).
       No persistence across restarts yet.
 - [ ] Hostile wildlife / AI
@@ -189,11 +280,6 @@ Roughly in the order they unblock each other:
 Not scoped or scheduled — captured here so they aren't lost before v1
 (single grounded animal, single biome) is even done:
 
-- **Birds as a playable animal type.** Flight is a fundamentally different
-  movement model from the current ground-based CharacterBody3D controller
-  (3D freedom of movement, no "floor," different camera needs, likely
-  different stamina rules for sustained flight/gliding vs. flapping).
-  Not a reskin of the Wolf controller — needs its own movement script.
 - **Sea creatures as a playable animal type.** Swimming needs buoyancy,
   water drag/currents, breath/oxygen management if surfacing matters, and
   its own biome (ocean/water volumes don't exist in the project yet at

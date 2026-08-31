@@ -18,3 +18,12 @@ credited here for provenance.
   (https://quaternius.com/packs/animatedfish.html). Fish1, Fish2, Fish3 used
   for ambient fish in the river/ponds; Dolphin/Manta ray/Shark/Whale from the
   same pack not used yet. Each has a single "Swim" animation.
+
+The playable Sparrow (flight species) uses no external model — no CC0 or
+commercial-use-safe rigged/animated bird asset could be found (Quaternius's
+animal packs have no birds at all; their "Monsters" pack's only flying
+options are fantasy creatures, e.g. its "Pigeon" is a purple tentacled
+blob-monster, not a bird; the best real bird found was CC-BY on Sketchfab but
+gated behind an account login). It's built procedurally in
+`scripts/player/simple_bird_model.gd` from primitive meshes with code-driven
+wing-flap animation, the same approach used for the terrain/water/fish.
