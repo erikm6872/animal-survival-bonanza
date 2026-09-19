@@ -1,5 +1,8 @@
 # Animal Survival Bonanza — Game Design Document (v0.1)
 
+This document covers what the game is and what's planned. For how the
+current code is actually built, see the [technical wiki](wiki/Home.md).
+
 ## Vision
 
 An open-source, microtransaction-free 3D animal survival game. Players
