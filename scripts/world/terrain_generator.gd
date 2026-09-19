@@ -41,7 +41,11 @@ func _build_mesh() -> void:
 			var y := TerrainHeight.get_height(x, z)
 			vertices[idx] = Vector3(x, y, z)
 			uvs[idx] = Vector2(float(xi) / RESOLUTION, float(zi) / RESOLUTION)
-			colors[idx] = _height_color(y)
+			# Vertex colors are read back as linear, but the color constants
+			# below are written the same way albedo_color normally is
+			# (sRGB) — without this conversion everything reads far paler
+			# than the numbers suggest, since sRGB->linear darkens midtones.
+			colors[idx] = _height_color(y).srgb_to_linear()
 
 	var indices := PackedInt32Array()
 	indices.resize(RESOLUTION * RESOLUTION * 6)
