@@ -318,6 +318,48 @@ Not scoped or scheduled — captured here so they aren't lost before v1
   probably its own biome/level, not just a new model dropped into the
   current ground world — worth treating as a separate vertical slice
   rather than folding into the current single-biome roadmap above.
+- **World size/structure: a large-but-finite overworld + Oblivion-style
+  side zones, not a Minecraft-style infinite world.** Full infinite
+  chunked generation was assessed and rejected as disproportionate: it
+  requires a new chunk streaming/unload subsystem (nothing like it exists
+  today), seam-matching between independently generated chunks, async/
+  threaded generation to avoid hitches, reworking mountains from a radial
+  ring around world origin into a distributed biome system, and — the
+  riskiest piece — redesigning rivers/lakes from the current hand-placed,
+  formula-based features into a coherent network that stays connected
+  across noise-based terrain generated in disconnected pieces (a real
+  hydrology/flow-simulation problem, not just "sample a function per
+  point"). None of that is proportionate to what this project needs.
+  The hybrid instead:
+  - Grows the existing overworld (still one static mesh/collision built
+    once, same architecture as today) — cheap up to a few times its
+    current size; past roughly 10x per axis at the current vertex density
+    the single-mesh build cost and memory stop being free, and it would
+    need splitting into a fixed, pre-determined set of tiles (not dynamic
+    streaming — just organizational) to stay reasonable.
+  - Adds side zones (caves, dungeons, buildings) as separate scenes
+    entered via a trigger + loading transition, teleporting back to the
+    overworld on exit — the same `change_scene_to_file()` +
+    `GameState`-survives-the-transition pattern the character-select →
+    world-scene flow and the pause menu's "Change Animal" option already
+    use, just with a couple more `GameState` fields (return position,
+    current zone) rather than new architecture.
+  - Caves specifically need their own geometry approach, since the
+    heightmap terrain this project uses can't represent a cave at all (one
+    height per `(x, z)` means no overhangs, no tunnels crossing above other
+    tunnels). Room-and-corridor generation (BSP or random-walk room
+    placement + connecting corridors, built from primitive meshes) is the
+    recommended approach over full 3D voxel/marching-cubes caves — it
+    matches the project's established style of simple primitives +
+    straightforward math (the terrain, water, and the procedural Sparrow
+    model all take this approach) rather than a much larger standalone
+    simulation system a voxel approach would require.
+  - Open design question to resolve before building: do side zones
+    regenerate fresh every visit (simpler — no persistence needed, but
+    nothing left behind by the player sticks around) or persist their
+    generated layout/contents (needs a small save/serialize step, and
+    interacts with whatever save-game system currency/progression
+    eventually needs anyway)?
 
 ## Open questions for future sessions
 
