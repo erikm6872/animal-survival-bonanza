@@ -3,15 +3,18 @@
 All assets below are CC0 (public domain) — no attribution legally required,
 credited here for provenance.
 
-- **Wolf.gltf, Stag.gltf** — Quaternius, "Ultimate Animated Animal Pack"
-  (https://quaternius.com/packs/ultimateanimatedanimals.html). Wolf
+- **Wolf.gltf, Stag.gltf, Fox.gltf** — Quaternius, "Ultimate Animated Animal
+  Pack" (https://quaternius.com/packs/ultimateanimatedanimals.html). Wolf
   animations: Attack, Death, Eating, Gallop, Gallop_Jump, Idle, Idle_2,
   Idle_2_HeadLow, Idle_HitReact1, Idle_HitReact2, Jump_ToIdle, Walk. Stag
   animations: Attack_Headbutt, Attack_Kick, Death, Eating, Gallop,
   Gallop_Jump, Idle, Idle_2, Idle_Headlow, Idle_HitReact1, Idle_HitReact2,
-  Jump_toIdle, Walk — same pack, similar but not identical clip names, which
-  is why species stats/animation names live in `resources/species/*.tres`
-  rather than being hardcoded.
+  Jump_toIdle, Walk. Fox has the same animation set/names as Wolf — same
+  pack, but not always identical clip names across animals, which is why
+  species stats/animation names live in `resources/species/*.tres` (and
+  `resources/enemies/*.tres` for hostile wildlife) rather than being
+  hardcoded. Fox is the first hostile enemy, used by
+  `scripts/enemies/enemy_controller.gd`.
 - **nature-kit/** — Kenney, "Nature Kit" (https://kenney.nl/assets/nature-kit).
   See `nature-kit/LICENSE.txt`.
 - **fish/** — Quaternius, "Animated Fish Pack"

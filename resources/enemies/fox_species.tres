@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="EnemySpecies" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/enemies/enemy_species.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://assets/models/Fox.gltf" id="2_model"]
+
+[resource]
+script = ExtResource("1_script")
+display_name = "Fox"
+model_scene = ExtResource("2_model")
+model_scale = 0.25
+max_health = 50.0
+attack_damage = 8.0
+walk_speed = 3.0
+chase_speed = 7.0
+detection_radius = 15.0
+attack_range = 1.5
+leash_radius = 25.0
+anim_idle = "Idle"
+anim_chase = "Gallop"
+anim_attack = "Attack"
+anim_death = "Death"
+anim_hit_react = Array[String](["Idle_HitReact1", "Idle_HitReact2"])
+hitbox_offset = Vector3(0, 0.4, -0.9)
+attack_hit_start_fraction = 0.41
+attack_hit_end_fraction = 0.64

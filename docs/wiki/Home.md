@@ -23,6 +23,9 @@ and what's planned next, see [docs/GDD.md](../GDD.md); this wiki is about
   runtime from one source-of-truth height function.
 - **[UI and Menus](UI-And-Menus.md)** — character select, the pause menu,
   HUD, debug overlay, and the `GameState` autoload that ties scenes together.
+- **[Hostile Wildlife](Hostile-Wildlife.md)** — `EnemySpecies`, the
+  idle/chase/attack/dead AI state machine, and why enemies stay off the
+  mountain terrain.
 - **[Design Decisions](Design-Decisions.md)** — a running log of *why*,
   covering choices the other pages don't have room to explain and the
   rejected approaches that shaped the current ones. Updated whenever we

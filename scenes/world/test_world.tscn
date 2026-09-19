@@ -1,4 +1,4 @@
-[gd_scene load_steps=6 format=3 uid="uid://c1n7w1h1kxqf2"]
+[gd_scene load_steps=7 format=3 uid="uid://c1n7w1h1kxqf2"]
 
 [ext_resource type="PackedScene" path="res://scenes/world/training_dummy.tscn" id="8_training_dummy"]
 [ext_resource type="Script" path="res://scripts/world/player_spawner.gd" id="13_player_spawner"]
@@ -6,6 +6,7 @@
 [ext_resource type="Script" path="res://scripts/world/biome_populator.gd" id="10_biome_pop"]
 [ext_resource type="Script" path="res://scripts/world/water_generator.gd" id="11_water_gen"]
 [ext_resource type="Script" path="res://scripts/world/fish_spawner.gd" id="12_fish_spawner"]
+[ext_resource type="Script" path="res://scripts/world/enemy_spawner.gd" id="14_enemy_spawner"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_1"]
 
@@ -50,3 +51,6 @@ script = ExtResource("11_water_gen")
 
 [node name="Fish" type="Node3D" parent="."]
 script = ExtResource("12_fish_spawner")
+
+[node name="Enemies" type="Node3D" parent="."]
+script = ExtResource("14_enemy_spawner")

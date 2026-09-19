@@ -102,6 +102,45 @@ rather than editing history.
   (not just eyeballing a similar shape) is what makes it hold together
   from every angle**, not just the angle it was screenshotted from.
 
+## Hostile wildlife
+
+- **A separate `EnemySpecies` resource, not a reuse of `AnimalSpecies`.**
+  The two look almost identical (model, stats, animation names, combat
+  timing), which made reuse tempting, but `AnimalSpecies.player_scene` has
+  no default specifically because it exists for the character-select spawn
+  flow — an enemy never goes through that flow. Forcing enemies into
+  `AnimalSpecies` would mean every enemy resource sets a field that means
+  nothing for it. A parallel, narrower type was simpler than teaching one
+  resource to serve two purposes. See
+  [Hostile Wildlife](Hostile-Wildlife.md).
+- **Fox, reusing the same Quaternius pack Wolf and Stag came from**, rather
+  than sourcing a new asset. Same reasoning as the Stag/bear decision above
+  — the pack already has several more ground animals (Husky, Cow, Bull)
+  with the same rig/animation-name conventions, so the first enemy cost an
+  afternoon instead of another asset search.
+- **Ground enemies are kept off the mountain terrain
+  (`enemy_spawner.gd`'s `play_area_half_size` well inside
+  `MOUNTAIN_START_RADIUS`), not a terrain-collision fix.** Verification
+  caught a real bug: a ground creature spawned or teleported into the
+  mountain ring can fall through the world, because the mountains' jagged
+  ridged noise makes the *analytic* height diverge from what the terrain
+  mesh's coarser collision grid actually resolves to. The fix scopes where
+  ground creatures go, rather than making the terrain collision itself
+  finer-grained near slopes — the cheaper fix for "one enemy type
+  shouldn't fall through the world," not a fix for mountain traversal in
+  general (which the player can still wander into and hasn't been
+  addressed).
+- **`attack_range` must be tuned against the `Hitbox`'s actual physical
+  reach, not picked independently.** They're unrelated numbers in the code
+  (one's an AI distance check, the other's a `hitbox_offset` + collision
+  radius), and nothing enforces they agree — a mismatch there shipped once
+  during initial testing (the AI correctly played its attack animation on
+  schedule while never actually being close enough to land a hit). Caught
+  by a test that checked whether player health actually dropped, not just
+  whether the state machine reached the ATTACK state — a reminder that
+  "the state machine did the right thing" and "the mechanic actually
+  works" are different claims, and worth verifying separately.
+
 ## Quality of life
 
 - **"Change Animal" reuses the character-select flow instead of a new

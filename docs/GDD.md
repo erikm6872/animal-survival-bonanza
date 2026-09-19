@@ -247,7 +247,10 @@ play. Multiplayer is a long-term goal, not a v1 requirement.
       (plain-color tint on the active species' fur surfaces, per
       `AnimalSpecies.fur_surfaces`; real fur textures are future work).
       No persistence across restarts yet.
-- [ ] Hostile wildlife / AI
+- [x] Hostile wildlife / AI — see "Next steps" history and
+      [the wiki](wiki/Hostile-Wildlife.md) for how it's built. First enemy:
+      a hostile Fox (idle → chase → attack, respawns after death), spawned
+      a handful of times across the map.
 - [ ] Currency + progression systems
 - [ ] Player hunger/thirst mechanics
 - [ ] Swimming / water collision (river and ponds are visual-only so far)
@@ -256,25 +259,18 @@ play. Multiplayer is a long-term goal, not a v1 requirement.
 
 Roughly in the order they unblock each other:
 
-1. **Hostile wildlife / AI.** Needs at least one enemy type with basic
-   state-machine behavior (idle/patrol → chase → attack) so combat has
-   something to actually fight back. The training dummy proved hit
-   detection works but doesn't hit back. Could reuse another animal from
-   the same Quaternius pack (Fox, Husky, etc. — same rig/animation set,
-   including `Idle_HitReact*`/`Death`) as the first enemy, giving it a
-   Damageable + its own Hitbox.
-2. **Player hunger/thirst mechanics.** Not scoped in detail yet — likely
+1. **Player hunger/thirst mechanics.** Not scoped in detail yet — likely
    depleting resources restored by eating/drinking in the world, following
    the same pattern as health/stamina (a resource + HUD element). Ties
    into the survival pillar and gives the river/ponds and future foraging
    actual gameplay purpose beyond scenery.
-3. **Swimming / water collision.** The river/ponds are visual-only —
+2. **Swimming / water collision.** The river/ponds are visual-only —
    nothing stops the player walking down into a basin and ending up under
    the water plane. Needs at least a shallow-water slowdown or a real
    swim state; full swimming-as-a-movement-domain is bigger scope (see
    "Future ideas") but *some* water interaction is needed even for the
    ground-based Wolf now that water exists in the world.
-4. **Currency + progression.** No systems exist yet. Needs a currency
+3. **Currency + progression.** No systems exist yet. Needs a currency
    resource, a source (kills/exploration per the GDD), and at least one
    spend sink (cosmetic or stat upgrade) to close the loop.
 
