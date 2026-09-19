@@ -270,9 +270,33 @@ Roughly in the order they unblock each other:
    swim state; full swimming-as-a-movement-domain is bigger scope (see
    "Future ideas") but *some* water interaction is needed even for the
    ground-based Wolf now that water exists in the world.
-3. **Currency + progression.** No systems exist yet. Needs a currency
-   resource, a source (kills/exploration per the GDD), and at least one
-   spend sink (cosmetic or stat upgrade) to close the loop.
+3. **Kill rewards / currency + progression.** No systems exist yet. Needs a
+   currency resource, kills (from hostile wildlife) as a source alongside
+   exploration, and at least one spend sink — per "Currency & progression"
+   above, cosmetic unlocks and ability/stat upgrades, both earned in-game
+   only.
+4. **Hostile mob spawn/density settings.** A menu option (pause menu
+   Settings, alongside the existing winter/fullscreen/etc. toggles) to
+   control how much hostile wildlife populates the world — e.g. a single
+   opponent, a fully populated world, or peaceful/no hostiles — plus
+   choosing which enemy species spawn once more than one exists. Currently
+   `enemy_spawner.gd` hardcodes a fixed count of one species with no
+   runtime control.
+5. **Clearer attack effects.** Hitboxes currently have no visual feedback
+   at all — a hit connects (health drops, a hit-react/death animation
+   plays) but there's nothing marking the hitbox itself opening, the swing
+   connecting, or where the point of impact was. Needs at least a simple
+   effect (a flash, a brief particle burst, a hit-stop) tied to
+   `Hitbox.activate()`/successful hits, so combat reads clearly without
+   staring at the HP number.
+6. **Richer mob behavior.** The current hostile-wildlife AI (see
+   [Hostile Wildlife](wiki/Hostile-Wildlife.md)) is deliberately basic:
+   idle → chase → attack, one enemy at a time, no awareness of other
+   enemies or terrain features. Future passes: roaming/patrol while idle
+   instead of standing still, predator-vs-prey behavior (some species flee
+   from the player or from other hostile species instead of only ever
+   being hostile to the player), and pack behavior (multiple enemies of
+   the same species coordinating rather than acting independently).
 
 ## Future ideas (post-v1, from co-creator brainstorming)
 
