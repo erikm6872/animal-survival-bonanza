@@ -31,6 +31,11 @@ func _ready() -> void:
 	var eagle_scene: PackedScene = load(EAGLE_SCENE_PATH)
 	eagle_root = eagle_scene.instantiate()
 	add_child(eagle_root)
+	# This pack's model faces -Z locally, the opposite of the +Z convention
+	# every other species' pack uses — the generic +Z-assuming flip in
+	# player_controller.gd/flight_controller.gd (see their _spawn_model())
+	# would otherwise end up facing the camera instead of away from it.
+	eagle_root.rotate_y(PI)
 
 	_recolor_surfaces()
 	anim_player = _find_animation_player(eagle_root)
