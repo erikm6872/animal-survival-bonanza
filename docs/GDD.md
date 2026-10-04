@@ -34,14 +34,20 @@ play. Multiplayer is a long-term goal, not a v1 requirement.
 
 ## Animal roster
 
-- Three playable animals now, chosen from a character select screen at
+- Four playable animals now, chosen from a character select screen at
   launch: **Wolf** (100 HP, 15 damage, 5/9 walk/sprint), **Stag** (150
   HP, 25 damage, 4/7 walk/sprint) — a tankier-but-slower archetype, same
   stat shape originally scoped for a bear. No CC0 rigged bear was found
   (see `docs/GDD.md` history / commit `4dd5420` for the search); the Stag
-  reuses the same Quaternius pack as the Wolf instead — and **Sparrow**
+  reuses the same Quaternius pack as the Wolf instead — **Sparrow**
   (60 HP, 10 damage, 8/16 cruise/fast), the first flying species (see
-  "Flight" below).
+  "Flight" below), and **Bald Eagle** (70 HP, 14 damage, 10/20
+  cruise/fast), a second flying species. Unlike Sparrow, the Eagle uses a
+  real CC0 rigged model (a different, older Quaternius pack than the one
+  the Wolf/Stag/Fox come from) recolored into bald-eagle markings, with
+  its missing combat/ground animations code-generated the same way
+  Sparrow's are — see
+  [Design Decisions](wiki/Design-Decisions.md#the-species-system).
 - Species are data-driven (`scripts/player/animal_species.gd`,
   `resources/species/*.tres`) — model, stats, animation clip names, fur
   tint config, and hitbox timing all live in the resource, not in

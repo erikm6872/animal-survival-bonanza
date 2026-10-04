@@ -10,14 +10,15 @@ through play — no purchases, ever.
 — auto-deployed from `main` on every push (see
 [.github/workflows/deploy-web.yml](.github/workflows/deploy-web.yml)).
 
-Early prototype, single biome. Three playable animals so far — Wolf and Stag
-(ground) and Sparrow (flight, with landing/hopping) — chosen from a character
-select screen, sharing a data-driven combat/movement framework (health,
-stamina, dodge, melee attacks). The world is a procedurally generated valley
-ringed by mountains, with rolling hills, a river with a waterfall, two ponds,
-ambient fish, and scattered trees/bushes. Progression/currency and hostile
-wildlife are not yet implemented. See [docs/GDD.md](docs/GDD.md) for the full
-design plan and [docs/wiki](docs/wiki/Home.md) for how it's built.
+Early prototype, single biome. Four playable animals so far — Wolf and Stag
+(ground), and Sparrow and Bald Eagle (flight, with landing/hopping) — chosen
+from a character select screen, sharing a data-driven combat/movement
+framework (health, stamina, dodge, melee attacks). Hostile wildlife (Fox)
+roams the world and fights back. The world is a procedurally generated
+valley ringed by mountains, with rolling hills, a river with a waterfall, two
+ponds, ambient fish, and scattered trees/bushes. Progression/currency is not
+yet implemented. See [docs/GDD.md](docs/GDD.md) for the full design plan and
+[docs/wiki](docs/wiki/Home.md) for how it's built.
 
 ## Tech stack
 
@@ -39,9 +40,9 @@ design plan and [docs/wiki](docs/wiki/Home.md) for how it's built.
 3. Pick an animal, then:
    - **Ground (Wolf/Stag):** WASD to move, mouse to look, Space to jump,
      Shift to sprint, Left Mouse to attack, Ctrl to dodge.
-   - **Flight (Sparrow):** WASD + mouse for full 3D movement (look up/down
-     to climb/dive), Shift for fast flying, Left Mouse to attack, Ctrl to
-     dodge, Space to land/take off when close to the ground.
+   - **Flight (Sparrow/Bald Eagle):** WASD + mouse for full 3D movement
+     (look up/down to climb/dive), Shift for fast flying, Left Mouse to
+     attack, Ctrl to dodge, Space to land/take off when close to the ground.
    - **Both:** `C` cycles camera distance, `Esc` opens the pause menu
      (Resume / Settings / Change Animal / Quit — Settings has mouse
      sensitivity, fullscreen, a summer/winter terrain toggle, and a fur

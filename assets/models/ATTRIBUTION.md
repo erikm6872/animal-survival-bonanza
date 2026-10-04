@@ -21,12 +21,24 @@ credited here for provenance.
   (https://quaternius.com/packs/animatedfish.html). Fish1, Fish2, Fish3 used
   for ambient fish in the river/ponds; Dolphin/Manta ray/Shark/Whale from the
   same pack not used yet. Each has a single "Swim" animation.
+- **Eagle.fbx** — Quaternius, "Animal Pack Vol.2"
+  (https://opengameart.org/content/animated-animales-low-poly), a different
+  (older) Quaternius pack than the others above. Rigged, with `Idle` and
+  `Flying` animations only — no attack/death/hit-react/ground-hop clips, so
+  those are code-generated at runtime (same root-rotation technique as
+  Sparrow below) by `scripts/player/eagle_model.gd`, which also recolors the
+  model's 4 material surfaces (Head/Wings/Beak/Claws) into bald eagle
+  colors, since the source model ships as flat gray. Used for the playable
+  Eagle (`resources/species/eagle_species.tres`).
 
 The playable Sparrow (flight species) uses no external model — no CC0 or
-commercial-use-safe rigged/animated bird asset could be found (Quaternius's
-animal packs have no birds at all; their "Monsters" pack's only flying
-options are fantasy creatures, e.g. its "Pigeon" is a purple tentacled
-blob-monster, not a bird; the best real bird found was CC-BY on Sketchfab but
-gated behind an account login). It's built procedurally in
+commercial-use-safe rigged/animated bird asset could be found in the
+Quaternius pack most of this project's other models come from (Quaternius's
+"Ultimate Animated Animal Pack" has no birds at all; their "Monsters" pack's
+only flying options are fantasy creatures, e.g. its "Pigeon" is a purple
+tentacled blob-monster, not a bird; the best real bird found was CC-BY on
+Sketchfab but gated behind an account login). It's built procedurally in
 `scripts/player/simple_bird_model.gd` from primitive meshes with code-driven
-wing-flap animation, the same approach used for the terrain/water/fish.
+wing-flap animation, the same approach used for the terrain/water/fish. (The
+Eagle above was found later, in a different, older Quaternius pack that
+hadn't turned up in that original search.)
