@@ -87,3 +87,4 @@ debug_damage_self={
 [rendering]
 
 textures/vram_compression/import_etc2_astc=true
+renderer/rendering_method.mobile="mobile"
