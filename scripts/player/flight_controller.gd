@@ -31,6 +31,7 @@ extends CharacterBody3D
 
 var anim_player: AnimationPlayer
 var fur_mesh: MeshInstance3D
+var model_instance: Node3D ## reset on respawn — see _respawn()
 
 var cruise_speed: float
 var fast_speed: float
@@ -117,6 +118,7 @@ func _spawn_model() -> void:
 	# Packs face +Z by default; flip X/Z to match this project's -Z-forward
 	# movement convention (see docs/GDD.md).
 	instance.transform = Transform3D(Basis.IDENTITY.scaled(Vector3(-species.model_scale, species.model_scale, -species.model_scale)), Vector3.ZERO)
+	model_instance = instance
 
 	anim_player = _find_animation_player(instance)
 	if species.fur_mesh_path != NodePath(""):
@@ -195,6 +197,13 @@ func _respawn() -> void:
 	hud.update_health(damageable.current_health, damageable.max_health)
 	velocity = Vector3.ZERO
 	_reset_position()
+	# Both of these otherwise stay wherever they ended up at the moment of
+	# death: model's basis is _face_direction()'s banked flight orientation,
+	# and model_instance's own rotation is the death animation's final pose
+	# (AnimationPlayer doesn't rest-pose a finished LOOP_NONE clip on its
+	# own) — without this the bird respawns stuck sideways/tilted.
+	model.transform.basis = Basis.IDENTITY
+	model_instance.transform = Transform3D(Basis.IDENTITY.scaled(Vector3(-species.model_scale, species.model_scale, -species.model_scale)), Vector3.ZERO)
 	anim_player.play(species.anim_idle)
 
 func _unhandled_input(event: InputEvent) -> void:

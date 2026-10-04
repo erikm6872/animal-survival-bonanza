@@ -9,6 +9,7 @@ extends CanvasLayer
 @onready var sensitivity_slider: HSlider = $SettingsPanel/PanelContainer/MarginContainer/VBoxContainer/SensitivityRow/SensitivitySlider
 @onready var fullscreen_button: Button = $SettingsPanel/PanelContainer/MarginContainer/VBoxContainer/FullscreenRow/FullscreenButton
 @onready var season_button: Button = $SettingsPanel/PanelContainer/MarginContainer/VBoxContainer/SeasonRow/SeasonButton
+@onready var hitbox_indicators_button: Button = $SettingsPanel/PanelContainer/MarginContainer/VBoxContainer/HitboxIndicatorsRow/HitboxIndicatorsButton
 @onready var wolf_color_picker: ColorPickerButton = $SettingsPanel/PanelContainer/MarginContainer/VBoxContainer/WolfColorRow/WolfColorPicker
 @onready var back_button: Button = $SettingsPanel/PanelContainer/MarginContainer/VBoxContainer/BackButton
 
@@ -28,6 +29,7 @@ func _ready() -> void:
 	sensitivity_slider.value_changed.connect(_on_sensitivity_changed)
 	fullscreen_button.toggled.connect(_on_fullscreen_toggled)
 	season_button.toggled.connect(_on_season_toggled)
+	hitbox_indicators_button.toggled.connect(_on_hitbox_indicators_toggled)
 	wolf_color_picker.color_changed.connect(_on_wolf_color_changed)
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -60,6 +62,8 @@ func _on_settings_pressed() -> void:
 	fullscreen_button.text = "On" if is_fullscreen else "Off"
 	season_button.set_pressed_no_signal(GameState.is_winter)
 	season_button.text = "On" if GameState.is_winter else "Off"
+	hitbox_indicators_button.set_pressed_no_signal(GameState.show_hitbox_indicators)
+	hitbox_indicators_button.text = "On" if GameState.show_hitbox_indicators else "Off"
 	if player:
 		wolf_color_picker.color = player.get_fur_color()
 
@@ -91,6 +95,10 @@ func _on_fullscreen_toggled(is_fullscreen: bool) -> void:
 func _on_season_toggled(is_winter: bool) -> void:
 	GameState.set_winter(is_winter)
 	season_button.text = "On" if is_winter else "Off"
+
+func _on_hitbox_indicators_toggled(enabled: bool) -> void:
+	GameState.set_show_hitbox_indicators(enabled)
+	hitbox_indicators_button.text = "On" if enabled else "Off"
 
 func _on_wolf_color_changed(color: Color) -> void:
 	var player := get_tree().get_first_node_in_group("player")

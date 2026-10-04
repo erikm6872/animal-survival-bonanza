@@ -2,9 +2,9 @@
 
 `scripts/player/animal_species.gd` defines `AnimalSpecies`, a `Resource`
 that fully describes one playable animal: its model, stats, animation clip
-names, fur tint config, and combat timing. The three playable species —
-Wolf, Stag, Sparrow — are each a single `.tres` file under
-`resources/species/`. Adding a fourth species that reuses an existing
+names, fur tint config, and combat timing. The four playable species —
+Wolf, Stag, Sparrow, Bald Eagle — are each a single `.tres` file under
+`resources/species/`. Adding another species that reuses an existing
 movement controller is a new `.tres` file, not a code change.
 
 ## Fields
@@ -38,6 +38,7 @@ movement controller is a new `.tres` file, not a code change.
 
 @export_group("Combat")
 @export var hitbox_offset: Vector3
+@export var hitbox_radius: float              # sphere radius of the melee Hitbox
 @export var attack_hit_start_fraction: float  # 0-1 of the Attack clip's length
 @export var attack_hit_end_fraction: float
 ```
@@ -115,3 +116,39 @@ reopen the same cycle risk from the resource side.
 
 No controller script changes needed, as long as the model's animation set
 covers the fields the chosen controller reads.
+
+## When the model's animation set is incomplete: the Bald Eagle's hybrid approach
+
+Sparrow is fully procedural (see
+[World Generation](World-Generation.md) and `simple_bird_model.gd`) because
+no bird model could be found at all. The Bald Eagle's model *was* found
+(Quaternius's "Eagle.fbx", a different/older pack than Wolf/Stag/Fox's —
+see `assets/models/ATTRIBUTION.md`) but it only ships two animations,
+`Idle` and `Flying` — nothing for attack/death/hit-react/hop.
+`scripts/player/eagle_model.gd` is the pattern for this situation:
+
+1. Instance the real model as a child, as normal.
+2. Recolor its material surfaces via `set_surface_override_material` if it
+   ships untextured/flat-gray (same technique as fur tinting, just applied
+   once at build time instead of from a runtime color picker) — the source
+   model has 4 surfaces (Wings/Beak/Head/Claws) which is enough to fake
+   bald eagle markings despite being a generic eagle mesh.
+3. Find the model's own `AnimationPlayer` and **add new animations into its
+   existing library** (`anim_player.get_animation_library("").add_animation(...)`)
+   rather than building a separate one — this is what lets the imported
+   `Idle`/`Flying` clips and the code-generated ones coexist and all be
+   referenced by name from the species `.tres` like any other species.
+4. Build the missing clips with the same whole-body-rotation/position
+   tracks Sparrow's procedural clips use (`NodePath(".:rotation:x")` etc.),
+   targeting the imported model's own root node. This works regardless of
+   whether the mesh underneath is primitive-built or a skinned import,
+   since it never touches individual bones.
+
+The accepted gap: Sparrow's ground-idle/hop poses fold its wings (specific
+child nodes `WingLeft`/`WingRight` that only exist because that model is
+built from scratch). A skinned import has no such named parts to target
+without inspecting its actual bone names, so the Eagle keeps its flight
+silhouette while landed/hopping rather than a folded-wing pose — a
+deliberate, minor trade accepted when choosing to reuse a real mesh instead
+of going fully procedural (see
+[Design Decisions](Design-Decisions.md#the-species-system)).

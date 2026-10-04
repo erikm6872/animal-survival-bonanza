@@ -78,6 +78,35 @@ rather than editing history.
   Landing reuses the ground controller's gravity/floor model rather than
   inventing a third movement mode — see
   [Movement Controllers](Movement-Controllers.md#landing-and-ground-hopping).
+- **The Bald Eagle reuses a real CC0 model instead of going fully
+  procedural like Sparrow, despite that model being incomplete.** A second
+  search (prompted by wanting a second bird) turned up Quaternius's
+  "Eagle.fbx" — CC0, rigged — in a different, older pack than the one
+  originally searched for Sparrow, which is why it didn't turn up the first
+  time. It only ships `Idle`/`Flying` animations, nothing for
+  attack/death/hit-react/hop. Two real options existed: ignore it and build
+  fully procedurally (guaranteed-complete animation set, more build time,
+  no authentic-feather look), or a hybrid — use the real mesh for its
+  idle/flying look, recolor its 4 generic-eagle surfaces into bald eagle
+  markings, and code-generate the missing clips as whole-body
+  rotation/position tracks on its root node (the same technique Sparrow's
+  own procedural clips already use, just retargeted). Went with the
+  hybrid: it's less new code than a from-scratch model, and a real mesh
+  reads as more authentic than primitives. The accepted cost: no per-bone
+  control means no folded-wing ground pose, so the Eagle keeps its flight
+  silhouette while landed — a minor, deliberate gap, not an oversight. See
+  [Species System](Species-System.md#when-the-models-animation-set-is-incomplete-the-bald-eagles-hybrid-approach).
+- **The Bald Eagle's `model_scale` needed a real in-game screenshot to
+  pick, not math.** A raw local-space AABB measurement on the imported mesh
+  came back implausibly tiny (millimeter-scale numbers) — this is the same
+  FBX/skinned-mesh AABB-composition gotcha already documented for the fish
+  models (see
+  [World Generation](World-Generation.md#fbx-unit-gotcha)), where an
+  unposed/unskinned AABB measurement doesn't reflect the actual rendered
+  size. Rather than guess a correction factor, `model_scale = 1.0` (i.e.
+  no correction) was tried first and simply looked right once actually
+  spawned in the world — a reminder that this particular gotcha is better
+  resolved by looking at the thing than by computing around it.
 
 ## World generation
 
