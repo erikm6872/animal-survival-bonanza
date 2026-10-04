@@ -25,6 +25,7 @@ func _ready() -> void:
 			break
 	_indicator = _build_indicator()
 	add_child(_indicator)
+	GameState.hitbox_indicators_changed.connect(_on_show_hitbox_indicators_changed)
 
 # Separate from the collision shape so players can actually see where a
 # swing will land — feedback that "combat feels too hard" traced back to the
@@ -67,6 +68,9 @@ func deactivate() -> void:
 # _ready()) because controllers assign hitbox_shape.shape after this node's
 # _ready() has already run — see player_controller.gd/_spawn_model().
 func _update_indicator() -> void:
+	if not GameState.show_hitbox_indicators:
+		_indicator.visible = false
+		return
 	if _collision_shape == null or _collision_shape.shape == null:
 		return
 	var shape := _collision_shape.shape
@@ -74,6 +78,13 @@ func _update_indicator() -> void:
 		var radius: float = shape.radius
 		_indicator.scale = Vector3.ONE * radius
 		_indicator.visible = true
+
+## The setting can flip mid-swing; re-run the same show/hide logic rather
+## than just hiding, so turning it back on while a hitbox happens to be
+## active doesn't leave it stuck invisible until the next attack.
+func _on_show_hitbox_indicators_changed(_enabled: bool) -> void:
+	if _active:
+		_update_indicator()
 
 func _try_hit(node: Node) -> void:
 	if not _active:
