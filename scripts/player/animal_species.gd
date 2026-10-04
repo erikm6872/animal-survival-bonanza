@@ -47,6 +47,10 @@ class_name AnimalSpecies
 
 @export_group("Combat")
 @export var hitbox_offset: Vector3 = Vector3(0, 0.5, -0.9)
+## Sphere radius of the melee Hitbox. Was a hardcoded 0.35 in every
+## controller; raised to 0.5 and moved here after player feedback that
+## landing a hit felt too hard — easier to tune per species now too.
+@export var hitbox_radius: float = 0.5
 ## Fraction (0-1) of the Attack clip's length the hitbox is live for — tuned
 ## per species to line up with that clip's bite/impact lunge.
 @export var attack_hit_start_fraction: float = 0.4

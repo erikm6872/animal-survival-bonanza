@@ -124,7 +124,7 @@ func _spawn_model() -> void:
 
 	hitbox.transform = Transform3D(Basis.IDENTITY, species.hitbox_offset)
 	var sphere := SphereShape3D.new()
-	sphere.radius = 0.35
+	sphere.radius = species.hitbox_radius
 	hitbox_shape.shape = sphere
 
 func _find_animation_player(node: Node) -> AnimationPlayer:

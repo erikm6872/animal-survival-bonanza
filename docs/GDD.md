@@ -282,13 +282,19 @@ Roughly in the order they unblock each other:
    choosing which enemy species spawn once more than one exists. Currently
    `enemy_spawner.gd` hardcodes a fixed count of one species with no
    runtime control.
-5. **Clearer attack effects.** Hitboxes currently have no visual feedback
-   at all — a hit connects (health drops, a hit-react/death animation
-   plays) but there's nothing marking the hitbox itself opening, the swing
-   connecting, or where the point of impact was. Needs at least a simple
-   effect (a flash, a brief particle burst, a hit-stop) tied to
-   `Hitbox.activate()`/successful hits, so combat reads clearly without
-   staring at the HP number.
+5. **Style the hitbox indicator to match the world, not a debug sphere.**
+   Hitboxes now show a translucent sphere while active (`Hitbox` in
+   `scripts/combat/hitbox.gd`), added after feedback that combat felt "too
+   hard" — tracing back to the hitbox being both too small (bumped from a
+   hardcoded 0.35 to a tunable `hitbox_radius`, default 0.5, on
+   `AnimalSpecies`/`EnemySpecies`) and invisible. The current indicator is
+   a flat-shaded, unshaded orange UV sphere — good enough to verify the
+   mechanic, but it doesn't match the low-poly stylized art direction (see
+   "Art direction" above) the rest of the game uses. Worth a pass to either
+   build it from the same faceted low-poly look as the terrain/trees, or
+   replace the plain sphere with a more game-appropriate effect (a swipe
+   arc, a brief particle burst, a hit-stop) tied to the same
+   `Hitbox.activate()`/successful-hit timing.
 6. **Richer mob behavior.** The current hostile-wildlife AI (see
    [Hostile Wildlife](wiki/Hostile-Wildlife.md)) is deliberately basic:
    idle → chase → attack, one enemy at a time, no awareness of other

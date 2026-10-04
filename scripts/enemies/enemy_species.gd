@@ -34,5 +34,7 @@ class_name EnemySpecies
 
 @export_group("Combat")
 @export var hitbox_offset: Vector3 = Vector3(0, 0.5, -0.9)
+## Sphere radius of the melee Hitbox. See AnimalSpecies.hitbox_radius.
+@export var hitbox_radius: float = 0.5
 @export var attack_hit_start_fraction: float = 0.4
 @export var attack_hit_end_fraction: float = 0.65
