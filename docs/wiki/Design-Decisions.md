@@ -180,6 +180,21 @@ rather than editing history.
   click through once per device — the warning is about certificate trust,
   which is a separate concern from the encrypted-transport requirement the
   secure-context check actually cares about.
+- **GitHub Pages replaced the local self-signed HTTPS server as the actual
+  install mechanism**, once it was clear the project was already public
+  (open-source, MIT-licensed) anyway — the "local network only" constraint
+  from the original ask no longer bought anything real. A GitHub Actions
+  workflow (`.github/workflows/deploy-web.yml`) exports the Web build and
+  deploys it to Pages on every push to `main`, using the
+  `barichello/godot-ci` Docker image (pinned to `4.7.2`, matching the local
+  Godot version) rather than hand-installing export templates in CI.
+  Upside beyond not babysitting a systemd service on a dev machine: Pages
+  gets real (non-self-signed) HTTPS for free, so the Chromebook no longer
+  needs the one-time "not private" click-through. `export_presets.cfg` had
+  to come out of `.gitignore` (it was in Godot's default template) so CI
+  uses the same export settings as local builds — checked first for
+  anything local-machine-specific (keystore paths, absolute paths); it had
+  none.
 
 ## Documentation
 

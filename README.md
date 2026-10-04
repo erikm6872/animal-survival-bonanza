@@ -6,6 +6,10 @@ through play — no purchases, ever.
 
 ## Status
 
+**[Play the latest build in your browser](https://erikm6872.github.io/animal-survival-bonanza/)**
+— auto-deployed from `main` on every push (see
+[.github/workflows/deploy-web.yml](.github/workflows/deploy-web.yml)).
+
 Early prototype, single biome. Three playable animals so far — Wolf and Stag
 (ground) and Sparrow (flight, with landing/hopping) — chosen from a character
 select screen, sharing a data-driven combat/movement framework (health,

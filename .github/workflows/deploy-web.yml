@@ -1,0 +1,55 @@
+name: Deploy web build to GitHub Pages
+
+# Keeps the playable web build at https://erikm6872.github.io/animal-survival-bonanza/
+# in sync with main, replacing the old local-only HTTPS server as the way to
+# get the latest build onto other devices (see
+# docs/wiki/Design-Decisions.md#deployment-chromebook-install).
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    container:
+      image: barichello/godot-ci:4.7.2
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Move export templates into place
+        run: |
+          mkdir -v -p ~/.local/share/godot/export_templates/
+          mv /root/.local/share/godot/export_templates/4.7.2.stable ~/.local/share/godot/export_templates/4.7.2.stable
+
+      - name: Export web build
+        run: |
+          mkdir -v -p build/web
+          godot --headless --verbose --export-release "Web" "$(pwd)/build/web/index.html"
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: build/web
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-24.04
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
