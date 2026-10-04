@@ -154,6 +154,33 @@ rather than editing history.
   effects, or lighting. If "real" seasons become a bigger feature later,
   this toggle is the seed of it, not the finished version.
 
+## Deployment (Chromebook install)
+
+- **Web export, not Android APK, as the actual delivery target** — despite
+  Android being the initially chosen/built path. The Chromebook's Play
+  Store support made Android sideloading look viable (no Crostini needed),
+  and a signed debug APK was built and verified successfully. But the
+  device turned out to be under Google Family Link (parental controls),
+  which hard-blocks installing apps from outside the Play Store for
+  supervised accounts — not a setting a parent can toggle, a built-in
+  safety restriction of account supervision. Rather than remove Family
+  Link supervision (a bigger decision than this feature warrants) or give
+  up, pivoted to a Godot Web (HTML5/WASM) export: it runs as a page in
+  Chrome, so it needs no app-install permission at all and sidesteps the
+  restriction entirely. The Android export toolchain/pipeline was kept
+  rather than torn out — it cost nothing extra to keep rebuilding both
+  targets, in case Family Link ever stops applying or the restriction
+  turns out to be liftable after all.
+- **Self-signed HTTPS, not plain HTTP, for the local download server.**
+  Godot's web export refuses to initialize outside a "secure context"
+  (HTTPS, or the special-cased `localhost`) — a browser requirement, not a
+  Godot one, and a `http://<lan-ip>` URL doesn't qualify no matter how
+  private the network is. A self-signed cert satisfies the API requirement
+  even though Chrome still shows a "not private" warning the user has to
+  click through once per device — the warning is about certificate trust,
+  which is a separate concern from the encrypted-transport requirement the
+  secure-context check actually cares about.
+
 ## Documentation
 
 - **A technical wiki, kept in two places on purpose.** `docs/wiki/` lives

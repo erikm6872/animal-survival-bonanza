@@ -297,6 +297,40 @@ Roughly in the order they unblock each other:
    from the player or from other hostile species instead of only ever
    being hostile to the player), and pack behavior (multiple enemies of
    the same species coordinating rather than acting independently).
+7. **A real loading screen for the web export.** Surfaced testing the web
+   build on a Chromebook: there's nothing telling the player the game is
+   still loading, so a slow load just looks frozen. Godot's web export has
+   a built-in splash/progress bar for the initial WASM+PCK download, but
+   that doesn't cover what happens right after picking a species — entering
+   `test_world.tscn` runs the terrain mesh build, collision generation,
+   and tree/bush/enemy/fish scattering all synchronously in `_ready()`
+   (see [World Generation](wiki/World-Generation.md)), which is fast on
+   this dev machine but was a noticeable stall on Chromebook hardware.
+   Needs its own loading indicator across that scene transition, not just
+   the initial page load.
+8. **Performance on lower-end/web hardware.** Same Chromebook test:
+   movement and combat work, but framerate was inconsistent. Candidates to
+   investigate: the web export's Mobile renderer + single-threaded WASM
+   (no COOP/COEP headers currently, see "Install on a Chromebook" history)
+   vs. the native Forward+ build this has only ever been tested with so
+   far; whether the synchronous world-gen cost in item 7 above is also a
+   steady-state framerate cost (e.g. tree/bush instance count) and not
+   just a one-time load stall; and whether `MOUNTAIN_END_RADIUS`/`RESOLUTION`
+   in `terrain_height.gd`/`terrain_generator.gd` are pushing more triangles
+   than lower-end GPUs handle comfortably.
+9. **PWA (installable web app) or similar, instead of a bookmarked
+   HTTPS URL.** The Chromebook install currently works by visiting the
+   dev-server page and reloading it to update (see
+   [Design Decisions](wiki/Design-Decisions.md#deployment-chromebook-install)) —
+   functional, but not an "installed app" the way the originally-planned
+   Android APK would have been. The web export preset already has a
+   `progressive_web_app` option block (currently `enabled=false` in
+   `export_presets.cfg`); turning it on would need an icon set, a web app
+   manifest, and a service worker Godot generates for you, after which
+   Chrome can offer "Install" to add a real launcher icon/standalone
+   window. Worth also checking whether the service worker's offline
+   caching interacts in any surprising way with the rebuild-and-reload
+   update flow already in place.
 
 ## Future ideas (post-v1, from co-creator brainstorming)
 
