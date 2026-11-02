@@ -48,6 +48,19 @@ play. Multiplayer is a long-term goal, not a v1 requirement.
   its missing combat/ground animations code-generated the same way
   Sparrow's are — see
   [Design Decisions](wiki/Design-Decisions.md#the-species-system).
+- **Chameleon** (50 HP, 5 damage, 2.5/5 walk/sprint) is a fifth playable
+  animal, ground-only for now (reuses `player.tscn` like Wolf/Stag) with
+  climbing planned as a future movement domain, not built yet. Its attack
+  is a tongue-extend rather than a bite: same `Hitbox`/`attack_hit_*_fraction`
+  system every species uses, just with a much longer `hitbox_offset`
+  reach and a short active window timed to when the (code-animated, no
+  CC0 chameleon model exists) tongue is actually extended — meaning,
+  unlike every other species, landing a hit means standing roughly
+  tongue-length away, not point-blank. Flies (`scripts/world/fly.gd`,
+  spawned by `fly_spawner.gd`) are ambient, eatable prey: the same tongue
+  attack that damages enemies also "eats" a fly (1 HP, dies in one hit)
+  and restores the attacker's stamina — see
+  [Design Decisions](wiki/Design-Decisions.md#the-species-system).
 - Species are data-driven (`scripts/player/animal_species.gd`,
   `resources/species/*.tres`) — model, stats, animation clip names, fur
   tint config, and hitbox timing all live in the resource, not in
@@ -343,6 +356,11 @@ Roughly in the order they unblock each other:
    window. Worth also checking whether the service worker's offline
    caching interacts in any surprising way with the rebuild-and-reload
    update flow already in place.
+10. **Climbing, as a real movement domain for the Chameleon.** The
+    Chameleon shipped ground-only on purpose (see "Animal roster" above) —
+    climbing walls/trees is a new movement domain the same size of effort
+    flight was for Sparrow (a third controller, new input/camera handling,
+    deciding what surfaces are climbable), not a small follow-up.
 
 ## Future ideas (post-v1, from co-creator brainstorming)
 

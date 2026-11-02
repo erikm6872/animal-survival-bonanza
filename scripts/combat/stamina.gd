@@ -50,3 +50,14 @@ func _spend(amount: float) -> void:
 	if current_stamina <= 0.0:
 		is_exhausted = true
 	changed.emit(current_stamina, max_stamina)
+
+## For external restores (e.g. the Chameleon eating a fly) rather than the
+## passive per-second regen above. Clears exhausted the same way regen does
+## — only once back above the recovery threshold, not on any restore.
+func restore(amount: float) -> void:
+	if amount <= 0.0:
+		return
+	current_stamina = minf(current_stamina + amount, max_stamina)
+	if is_exhausted and current_stamina >= max_stamina * exhausted_recovery_fraction:
+		is_exhausted = false
+	changed.emit(current_stamina, max_stamina)
