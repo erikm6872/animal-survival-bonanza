@@ -107,6 +107,49 @@ rather than editing history.
   no correction) was tried first and simply looked right once actually
   spawned in the world — a reminder that this particular gotcha is better
   resolved by looking at the thing than by computing around it.
+- **Chameleon is fully procedural, no real-model search needed first.**
+  Unlike Sparrow and the Eagle, no search for a CC0 chameleon model was
+  done before building one from primitives — the tongue-extend attack
+  needs a custom animation no stock pack would ship regardless of species,
+  so there was no scenario where a found model would have saved the
+  procedural-animation work anyway. Built the same way as
+  `simple_bird_model.gd`: primitive meshes, code-driven `Animation`
+  resources, including a tongue built as a wrapper `Node3D` (rotated to
+  point forward) containing an un-rotated `CylinderMesh` offset by half
+  its height — needed because a `CylinderMesh`'s long axis is always
+  local Y, which survives as the *scale* axis regardless of how the
+  containing node is rotated, so animating the mesh's own `scale.z`
+  directly would have stretched its radius, not its length.
+- **The tongue attack's `Hitbox` is a fixed point at range, not something
+  that tracks the animated tongue tip.** Every species' attack hitbox
+  already works this way (a fixed `hitbox_offset`, active only during a
+  timing window) — bite attacks just don't make the fixed-vs-animated
+  distinction visible, since their reach is short enough that "close to
+  the target" and "at the hitbox's exact offset" are nearly the same
+  thing. The tongue's reach (~1.4 units) makes the gap obvious: standing
+  right next to a target **misses**, because the hitbox sits at the
+  tongue's full extension, not wherever the target happens to be. Caught
+  by the same kind of deterministic distance test that found the Fox's
+  original `attack_range`/hitbox-reach mismatch — confirmed the hit
+  lands cleanly at the intended ~1.3-unit range, and misses at
+  point-blank range, which is a real (if initially surprising) gameplay
+  characteristic of a ranged tongue attack, not a bug.
+- **Flies reuse Hitbox/Damageable wholesale instead of a new "edible"
+  component.** A fly has a 1-HP `Damageable` under its own `Area3D` (not
+  a `CharacterBody3D` — flies never need to physically collide with the
+  player while wandering), so the exact same tongue attack that damages
+  enemies also "eats" a fly in one hit. `Damageable.died(source)` already
+  carries the attacker, so the fly's own script restores the attacker's
+  stamina (`Stamina.restore()`, a new method — regen before this was
+  purely passive/per-second) and frees itself. Zero new combat-system
+  code, just a new thing for the existing system to apply to.
+- **Chameleon movement is ground-only for this pass; climbing is
+  deliberately deferred, not dropped.** Real chameleons climb, and it's
+  the obvious next step for this species specifically, but it's a new
+  movement domain the same size of effort flight was for Sparrow — out of
+  scope for landing the base species. Reuses `player.tscn`/
+  `player_controller.gd` as-is for now; see "Next steps" in
+  `docs/GDD.md`.
 
 ## World generation
 
