@@ -30,3 +30,16 @@ func set_show_hitbox_indicators(value: bool) -> void:
 		return
 	show_hitbox_indicators = value
 	hitbox_indicators_changed.emit(show_hitbox_indicators)
+
+## Whether hostile wildlife shows a permanent floating health bar
+## (scripts/combat/health_bar_3d.gd), toggled from the pause menu's
+## Settings panel. Defaults off so combat UI doesn't get busier unless
+## asked for.
+signal show_health_bars_changed(enabled: bool)
+var show_health_bars: bool = false
+
+func set_show_health_bars(value: bool) -> void:
+	if value == show_health_bars:
+		return
+	show_health_bars = value
+	show_health_bars_changed.emit(show_health_bars)

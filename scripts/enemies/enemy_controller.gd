@@ -62,6 +62,11 @@ func _ready() -> void:
 	damageable.damaged.connect(_on_damaged)
 	damageable.died.connect(_on_died)
 
+	var health_bar := HealthBar3D.new()
+	add_child(health_bar)
+	health_bar.position = Vector3(0, species.hitbox_offset.y + 0.6, 0)
+	health_bar.setup(damageable)
+
 func _spawn_model() -> void:
 	var instance: Node3D = species.model_scene.instantiate()
 	model.add_child(instance)
@@ -93,9 +98,14 @@ func _on_animation_finished(anim_name: StringName) -> void:
 	elif anim_name in species.anim_hit_react:
 		is_hit_reacting = false
 
-func _on_damaged(_amount: float, _source: Node) -> void:
+func _on_damaged(amount: float, _source: Node) -> void:
 	if state == State.DEAD:
 		return
+	# hitbox here is this enemy's own attack hitbox (for hitting the player),
+	# not where the player's attack landed on it — Damageable has no
+	# position of its own (it's a plain Node), so this approximates the
+	# impact point at roughly chest height instead.
+	HitMarker.spawn(get_parent(), global_position + Vector3(0, species.hitbox_offset.y, 0), amount)
 	is_hit_reacting = true
 	is_attacking = false
 	hitbox_open = false

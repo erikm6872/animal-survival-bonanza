@@ -61,34 +61,45 @@ func _find_animation_player(node: Node) -> AnimationPlayer:
 	return null
 
 ## The source FBX has no eye geometry at all (just the flat-colored head
-## surface) — add simple white-and-black sphere eyes as extra mesh parts
-## so the eagle doesn't look blank-faced. Positioned by eye (no bone to
-## attach to) near the front of the head, just behind the beak, using the
-## same post-model_scale coordinate space as hitbox_offset above.
+## surface) — add simple white-and-black sphere eyes as extra mesh parts so
+## the eagle doesn't look blank-faced.
+##
+## These are children of eagle_root, which sits *inside* the model_scale
+## (0.15) multiplier player_controller.gd/flight_controller.gd apply
+## externally to this whole script's root node — unlike hitbox_offset above,
+## which is set directly on the sibling Hitbox node and already lives in
+## final, post-model_scale space. A first attempt positioned/sized these
+## eyes using hitbox_offset-like numbers directly, which put them at
+## roughly (0.009, 0.015, 0.03) relative to the player — practically at the
+## model's origin, buried inside the torso — instead of out at the head.
+## Dividing the intended final position/radius by model_scale (i.e.
+## multiplying by ~6.67) here corrects for that, since eagle_root has no
+## scale of its own to absorb it.
 func _build_eyes() -> void:
 	var white_mat := StandardMaterial3D.new()
 	white_mat.albedo_color = Color(1, 1, 1)
 	var pupil_mat := StandardMaterial3D.new()
 	pupil_mat.albedo_color = Color(0.05, 0.05, 0.05)
 
+	var model_scale_inverse := 1.0 / 0.15 # matches eagle_species.tres's model_scale
 	var eye_mesh := SphereMesh.new()
-	eye_mesh.radius = 0.035
-	eye_mesh.height = 0.07
+	eye_mesh.radius = 0.035 * model_scale_inverse
+	eye_mesh.height = eye_mesh.radius * 2.0
 	var pupil_mesh := SphereMesh.new()
-	pupil_mesh.radius = 0.016
-	pupil_mesh.height = 0.032
+	pupil_mesh.radius = 0.016 * model_scale_inverse
+	pupil_mesh.height = pupil_mesh.radius * 2.0
 
 	for side in [-1.0, 1.0]:
 		var eye := MeshInstance3D.new()
 		eye.mesh = eye_mesh
 		eye.set_surface_override_material(0, white_mat)
-		eye.position = Vector3(side * 0.06, 0.1, 0.2)
+		eye.position = Vector3(side * 0.05, 0.08, 0.16) * model_scale_inverse
 		eagle_root.add_child(eye)
 
 		var pupil := MeshInstance3D.new()
 		pupil.mesh = pupil_mesh
 		pupil.set_surface_override_material(0, pupil_mat)
-		pupil.position = Vector3(side * 0.06, 0.1, 0.22)
+		pupil.position = Vector3(side * 0.05, 0.08, 0.18) * model_scale_inverse
 		eagle_root.add_child(pupil)
 
 func _recolor_surfaces() -> void:

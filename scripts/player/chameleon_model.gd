@@ -121,7 +121,11 @@ func _build_tongue() -> void:
 	var wrapper := Node3D.new()
 	wrapper.name = "Tongue" # referenced by name in _make_tongue_attack_animation()'s track path
 	wrapper.position = Vector3(0, 0.15, 0.36)
-	wrapper.rotation = Vector3(deg_to_rad(90), 0, 0)
+	# 90deg would shoot the tongue dead level; pitching up to 60deg angles it
+	# ~30deg above horizontal instead, since flies hover well above the
+	# Chameleon's low mouth height (see fly_spawner.gd's hover_height_min/max)
+	# and a flat-forward tongue couldn't reach them.
+	wrapper.rotation = Vector3(deg_to_rad(60), 0, 0)
 	add_child(wrapper)
 
 	var tongue_mesh := CylinderMesh.new()

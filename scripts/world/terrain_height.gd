@@ -7,7 +7,7 @@ class_name TerrainHeight
 ## source of truth for where the river/ponds are, so water_generator.gd's
 ## visible water always lines up with the basins carved in here.
 
-const AMPLITUDE_LARGE: float = 3.5
+const AMPLITUDE_LARGE: float = 5.5
 const AMPLITUDE_DETAIL: float = 0.6
 const FREQUENCY_LARGE: float = 0.015
 const FREQUENCY_DETAIL: float = 0.08
