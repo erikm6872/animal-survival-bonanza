@@ -16,8 +16,8 @@ const NOISE_SEED: int = 20260827
 # Mountains: a ring of rising, ridged terrain surrounding the playable area
 # (which stays untouched inside MOUNTAIN_START_RADIUS), so the map reads as
 # a valley rather than terrain that just stops.
-const MOUNTAIN_START_RADIUS: float = 65.0
-const MOUNTAIN_END_RADIUS: float = 100.0
+const MOUNTAIN_START_RADIUS: float = 130.0
+const MOUNTAIN_END_RADIUS: float = 200.0
 const MOUNTAIN_MAX_HEIGHT: float = 45.0
 const MOUNTAIN_NOISE_FREQUENCY: float = 0.025
 
@@ -34,7 +34,7 @@ const RIVER_BED_DEPTH: float = 1.0 ## how far below the water surface the carved
 # coming down out of the mountains — the step between the two water levels
 # is the falls. water_generator.gd builds the two flat river ribbons plus a
 # vertical drop mesh bridging them at WATERFALL_X.
-const WATERFALL_X: float = 80.0
+const WATERFALL_X: float = 160.0
 const WATERFALL_DROP_HEIGHT: float = 14.0
 const RIVER_SOURCE_WATER_LEVEL: float = RIVER_WATER_LEVEL + WATERFALL_DROP_HEIGHT
 

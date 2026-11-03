@@ -5,7 +5,7 @@ extends Node3D
 ## lines up with the ground instead of floating or clipping. Visual only —
 ## no swimming collision yet.
 
-const RIVER_LENGTH_HALF: float = 100.0
+const RIVER_LENGTH_HALF: float = 200.0
 const RIVER_SEGMENTS: int = 50 ## across the river's full length; segment count below the falls is split proportionally
 
 func _ready() -> void:
