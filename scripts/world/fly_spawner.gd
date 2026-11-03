@@ -17,7 +17,7 @@ const FLY_SCRIPT: String = "res://scripts/world/fly.gd"
 @export var hover_height_min: float = 0.3
 @export var hover_height_max: float = 1.0
 @export var swarm_radius: float = 2.5
-@export var play_area_half_size: float = 55.0
+@export var play_area_half_size: float = 110.0
 @export var safe_zone_radius: float = 10.0
 @export var rng_seed: int = 20261101
 

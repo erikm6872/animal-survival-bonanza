@@ -55,3 +55,12 @@ class_name AnimalSpecies
 ## per species to line up with that clip's bite/impact lunge.
 @export var attack_hit_start_fraction: float = 0.4
 @export var attack_hit_end_fraction: float = 0.65
+
+## Poison-on-hit (e.g. the Komodo Dragon's bite). 0 duration = no poison,
+## the default for every species that doesn't opt in. When set, a landed
+## hit doesn't apply the poison tick immediately — see poison_delay below.
+@export var poison_damage_per_tick: float = 0.0
+@export var poison_tick_interval: float = 1.0
+@export var poison_duration: float = 0.0
+## How long after the hit lands before the poison starts ticking.
+@export var poison_delay: float = 0.0
