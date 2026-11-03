@@ -23,6 +23,6 @@ anim_death = "Death"
 anim_dodge = "Gallop"
 anim_hit_react = Array[String](["HitReact"])
 hitbox_offset = Vector3(0, 0.15, -1.4)
-hitbox_radius = 0.15
+hitbox_radius = 0.3
 attack_hit_start_fraction = 0.22
 attack_hit_end_fraction = 0.62
