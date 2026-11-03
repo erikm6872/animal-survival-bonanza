@@ -88,6 +88,10 @@ func _ready() -> void:
 	damageable.current_health = species.max_health
 	hitbox.damage = species.attack_damage
 	hitbox.owner_body = self
+	hitbox.poison_damage_per_tick = species.poison_damage_per_tick
+	hitbox.poison_tick_interval = species.poison_tick_interval
+	hitbox.poison_duration = species.poison_duration
+	hitbox.poison_delay = species.poison_delay
 
 	anim_player.get_animation(species.anim_idle).loop_mode = Animation.LOOP_LINEAR
 	anim_player.get_animation(species.anim_walk).loop_mode = Animation.LOOP_LINEAR

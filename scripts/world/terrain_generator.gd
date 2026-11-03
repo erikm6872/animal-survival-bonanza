@@ -3,8 +3,8 @@ extends StaticBody3D
 ## Builds a rolling-hills ground mesh + matching collision at runtime from
 ## TerrainHeight, replacing the old flat plane.
 
-const TERRAIN_SIZE: float = 200.0
-const RESOLUTION: int = 100 ## segments per side
+const TERRAIN_SIZE: float = 400.0
+const RESOLUTION: int = 200 ## segments per side
 const CELL_SIZE: float = TERRAIN_SIZE / RESOLUTION
 
 @onready var mesh_instance: MeshInstance3D = $MeshInstance3D

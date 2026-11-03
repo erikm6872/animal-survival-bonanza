@@ -38,6 +38,7 @@ func _ready() -> void:
 	eagle_root.rotate_y(PI)
 
 	_recolor_surfaces()
+	_build_eyes()
 	anim_player = _find_animation_player(eagle_root)
 	_add_custom_animations()
 
@@ -58,6 +59,37 @@ func _find_animation_player(node: Node) -> AnimationPlayer:
 		if found:
 			return found
 	return null
+
+## The source FBX has no eye geometry at all (just the flat-colored head
+## surface) — add simple white-and-black sphere eyes as extra mesh parts
+## so the eagle doesn't look blank-faced. Positioned by eye (no bone to
+## attach to) near the front of the head, just behind the beak, using the
+## same post-model_scale coordinate space as hitbox_offset above.
+func _build_eyes() -> void:
+	var white_mat := StandardMaterial3D.new()
+	white_mat.albedo_color = Color(1, 1, 1)
+	var pupil_mat := StandardMaterial3D.new()
+	pupil_mat.albedo_color = Color(0.05, 0.05, 0.05)
+
+	var eye_mesh := SphereMesh.new()
+	eye_mesh.radius = 0.035
+	eye_mesh.height = 0.07
+	var pupil_mesh := SphereMesh.new()
+	pupil_mesh.radius = 0.016
+	pupil_mesh.height = 0.032
+
+	for side in [-1.0, 1.0]:
+		var eye := MeshInstance3D.new()
+		eye.mesh = eye_mesh
+		eye.set_surface_override_material(0, white_mat)
+		eye.position = Vector3(side * 0.06, 0.1, 0.2)
+		eagle_root.add_child(eye)
+
+		var pupil := MeshInstance3D.new()
+		pupil.mesh = pupil_mesh
+		pupil.set_surface_override_material(0, pupil_mat)
+		pupil.position = Vector3(side * 0.06, 0.1, 0.22)
+		eagle_root.add_child(pupil)
 
 func _recolor_surfaces() -> void:
 	var mesh_instance := _find_mesh_instance(eagle_root)

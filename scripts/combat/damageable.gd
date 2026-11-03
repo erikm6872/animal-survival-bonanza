@@ -23,3 +23,18 @@ func take_damage(amount: float, source: Node = null) -> void:
 	if current_health <= 0.0:
 		is_dead = true
 		died.emit(source)
+
+## Starts a delayed damage-over-time effect (e.g. the Komodo Dragon's bite).
+## Each poison application runs as its own independent timer loop, so
+## stacking multiple bites stacks multiple concurrent DoTs rather than
+## refreshing a single one.
+func apply_poison(damage_per_tick: float, tick_interval: float, duration: float, delay: float, source: Node = null) -> void:
+	if delay > 0.0:
+		await get_tree().create_timer(delay).timeout
+	var elapsed := 0.0
+	while elapsed < duration:
+		if is_dead:
+			return
+		await get_tree().create_timer(tick_interval).timeout
+		elapsed += tick_interval
+		take_damage(damage_per_tick, source)

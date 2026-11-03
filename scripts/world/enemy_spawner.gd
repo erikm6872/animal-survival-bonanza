@@ -13,7 +13,7 @@ const FOX_SPECIES: String = "res://resources/enemies/fox_species.tres"
 ## only at its 2-unit grid) can diverge sharply from the smooth analytic
 ## height used to place things, enough for a ground-based enemy (or the
 ## player, wandering the same terrain) to spawn over a gap and fall through.
-@export var play_area_half_size: float = 55.0
+@export var play_area_half_size: float = 110.0
 @export var safe_zone_radius: float = 20.0 ## keep clear around spawn/dummy
 @export var rng_seed: int = 20260918
 

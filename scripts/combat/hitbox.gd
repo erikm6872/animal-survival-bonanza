@@ -8,6 +8,14 @@ class_name Hitbox
 @export var damage: float = 15.0
 @export var owner_body: Node = null ## Body (and its descendants) to ignore, so an attacker can't hit itself.
 
+## Poison-on-hit, set from AnimalSpecies' matching fields (see
+## player_controller.gd/flight_controller.gd's _ready()). duration 0 = no
+## poison, the default for every species that doesn't opt in.
+@export var poison_damage_per_tick: float = 0.0
+@export var poison_tick_interval: float = 1.0
+@export var poison_duration: float = 0.0
+@export var poison_delay: float = 0.0
+
 var _active: bool = false
 var _hit_targets: Array[Node] = []
 
@@ -98,3 +106,5 @@ func _try_hit(node: Node) -> void:
 		return
 	_hit_targets.append(node)
 	damageable.take_damage(damage, owner_body)
+	if poison_duration > 0.0:
+		damageable.apply_poison(poison_damage_per_tick, poison_tick_interval, poison_duration, poison_delay, owner_body)
