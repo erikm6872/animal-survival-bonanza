@@ -5,6 +5,13 @@ class_name Hitbox
 ## deactivate() to close it; only reports hits while active. Targets need a
 ## child node named "Damageable" to be hittable.
 
+## Emitted right after a hit lands, separate from Damageable's own
+## `damaged` signal — lets the attacker react to its own hit (e.g. the
+## Chameleon's secret devour-an-enemy mechanic in player_controller.gd)
+## without that logic having to live in Damageable, which doesn't know who
+## attacked.
+signal landed_hit(target: Node)
+
 @export var damage: float = 15.0
 @export var owner_body: Node = null ## Body (and its descendants) to ignore, so an attacker can't hit itself.
 
@@ -108,3 +115,4 @@ func _try_hit(node: Node) -> void:
 	damageable.take_damage(damage, owner_body)
 	if poison_duration > 0.0:
 		damageable.apply_poison(poison_damage_per_tick, poison_tick_interval, poison_duration, poison_delay, owner_body)
+	landed_hit.emit(node)

@@ -68,6 +68,14 @@ var is_dodging: bool = false
 var dodge_time: float = 0.0
 var dodge_direction: Vector3 = Vector3.ZERO
 
+## Secret mechanic: devour an enemy outright after eating enough flies (see
+## AnimalSpecies.can_devour_enemies). Only the Chameleon opts in; flies_eaten
+## increments for every species via fly.gd's generic source._on_fly_eaten()
+## call, but it's harmless (just an unused counter) for species that never
+## encounter flies in practice.
+const FLIES_NEEDED_TO_DEVOUR: int = 5
+var flies_eaten: int = 0
+
 func _ready() -> void:
 	if GameState.selected_species:
 		species = GameState.selected_species
@@ -90,6 +98,7 @@ func _ready() -> void:
 	hitbox.poison_tick_interval = species.poison_tick_interval
 	hitbox.poison_duration = species.poison_duration
 	hitbox.poison_delay = species.poison_delay
+	hitbox.landed_hit.connect(_on_hitbox_landed_hit)
 
 	# The pack's animations import with loop_mode off; movement loops need it on.
 	anim_player.get_animation(species.anim_idle).loop_mode = Animation.LOOP_LINEAR
@@ -166,6 +175,27 @@ func _on_died(_source: Node) -> void:
 	anim_player.play(species.anim_death)
 	await get_tree().create_timer(DEATH_RESPAWN_DELAY).timeout
 	_respawn()
+
+## Called by fly.gd on every fly this player eats (alongside its Stamina
+## restore), regardless of species — the counter's only ever acted on by
+## species that opt into can_devour_enemies, so it's harmless elsewhere.
+func _on_fly_eaten() -> void:
+	flies_eaten += 1
+
+## Fires for every landed hit, so this double-checks it's actually ready to
+## devour (not every tongue hit lands on an enemy, and not every species can
+## devour at all) before consuming the fly count and triggering the visual.
+func _on_hitbox_landed_hit(target: Node) -> void:
+	if not species.can_devour_enemies or flies_eaten < FLIES_NEEDED_TO_DEVOUR:
+		return
+	if not target.has_method("begin_devoured"):
+		return
+	flies_eaten -= FLIES_NEEDED_TO_DEVOUR
+	var mouth_position := global_position + Vector3(0, 0.6, 0)
+	# Matches the Chameleon's TongueAttack snap-back (keys at 0.3 -> 0.5 of
+	# its 0.5s clip, see chameleon_model.gd) so the prey visually arrives at
+	# the mouth right as the tongue finishes retracting.
+	target.begin_devoured(mouth_position, 0.2)
 
 ## Plain-color tint for now; a real fur texture can replace this later without
 ## changing the caller (pause menu) — it only knows about get/set color.

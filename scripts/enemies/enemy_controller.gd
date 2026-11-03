@@ -18,6 +18,7 @@ extends CharacterBody3D
 @onready var hitbox: Hitbox = $Model/Hitbox
 @onready var hitbox_shape: CollisionShape3D = $Model/Hitbox/CollisionShape3D
 @onready var damageable: Damageable = $Damageable
+@onready var body_collision: CollisionShape3D = $CollisionShape3D
 
 var anim_player: AnimationPlayer
 var gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
@@ -132,7 +133,48 @@ func _respawn() -> void:
 	state = State.IDLE
 	global_position = home_position
 	velocity = Vector3.ZERO
+	model.visible = true
+	model.scale = Vector3.ONE
+	body_collision.disabled = false
+	set_physics_process(true)
 	anim_player.play(species.anim_idle)
+
+## Secret mechanic (see player_controller.gd's _on_hitbox_landed_hit): an
+## outright devour instead of a normal death — the model squishes down and
+## is pulled toward the attacker's mouth over `duration`, timed to match
+## the Chameleon's tongue retracting, then respawns same as a normal death.
+## Disables physics processing for the duration so a direct global_position
+## tween isn't fought by gravity/move_and_slide in _physics_process().
+func begin_devoured(mouth_position: Vector3, duration: float) -> void:
+	if state == State.DEAD:
+		return
+	state = State.DEAD
+	is_attacking = false
+	is_hit_reacting = false
+	hitbox_open = false
+	hitbox.deactivate()
+	damageable.is_dead = true
+	damageable.current_health = 0.0
+	anim_player.stop()
+	set_physics_process(false)
+	body_collision.disabled = true
+
+	var start_position := global_position
+	var start_scale := model.scale
+	var tween := create_tween()
+	tween.set_parallel(true)
+	tween.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
+	tween.tween_method(func(t: float): global_position = start_position.lerp(mouth_position, t), 0.0, 1.0, duration)
+	# Lerping to exactly zero scale makes Godot choke trying to invert the
+	# resulting singular transform matrix (logs a "det == 0" engine error
+	# every frame); a tiny non-zero target avoids that while still reading
+	# as "gone" once hidden below.
+	tween.tween_method(func(t: float): model.scale = start_scale.lerp(Vector3.ONE * 0.001, t), 0.0, 1.0, duration)
+	await tween.finished
+
+	model.visible = false
+	await get_tree().create_timer(DEATH_RESPAWN_DELAY).timeout
+	_respawn()
 
 func _physics_process(delta: float) -> void:
 	if not is_on_floor():

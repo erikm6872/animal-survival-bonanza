@@ -26,3 +26,4 @@ hitbox_offset = Vector3(0, 0.65, -1.22)
 hitbox_radius = 0.4
 attack_hit_start_fraction = 0.22
 attack_hit_end_fraction = 0.62
+can_devour_enemies = true

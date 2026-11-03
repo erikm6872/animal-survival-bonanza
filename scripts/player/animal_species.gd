@@ -64,3 +64,10 @@ class_name AnimalSpecies
 @export var poison_duration: float = 0.0
 ## How long after the hit lands before the poison starts ticking.
 @export var poison_delay: float = 0.0
+
+## Secret mechanic: once this species has eaten FLIES_NEEDED_TO_DEVOUR
+## flies (see player_controller.gd), its next landed hit on hostile
+## wildlife devours it outright instead of just damaging it. Only the
+## Chameleon opts in — the devour visual (enemy squishing down the tongue
+## into the mouth) only makes sense for a tongue-grab attack.
+@export var can_devour_enemies: bool = false

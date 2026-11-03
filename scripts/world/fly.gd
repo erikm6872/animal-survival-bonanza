@@ -93,6 +93,8 @@ func _on_eaten(source: Node) -> void:
 		var stamina: Stamina = source.get_node_or_null("Stamina")
 		if stamina:
 			stamina.restore(STAMINA_RESTORE_AMOUNT)
+		if source.has_method("_on_fly_eaten"):
+			source._on_fly_eaten()
 	queue_free()
 
 func _pick_new_target() -> void:
