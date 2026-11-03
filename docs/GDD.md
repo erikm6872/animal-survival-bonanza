@@ -434,3 +434,29 @@ Not scoped or scheduled — captured here so they aren't lost before v1
 - Whether additional animals (for enemies or future playable species) come
   from the same Quaternius pack already partially downloaded, or a new
   source.
+- **Home screen.** No title/main-menu scene exists yet — the game currently
+  boots straight into character select. Needs scoping: New Game/Settings/
+  Quit at minimum; whether it also needs a "Continue" slot depends on
+  whether a save system exists by then (see Currency & progression below,
+  which has the same open dependency).
+- **Currency & progression implementation.** The design is sketched above
+  ("Currency & progression" section: cosmetic unlocks + ability/stat
+  upgrades, no real-money purchases) but nothing is built — no currency
+  balance, no earning mechanic, no shop/unlock UI, and critically no save
+  system yet to persist any of it across sessions. Needs scoping: how
+  currency is earned (per-kill? per-session? eating prey, like the
+  Chameleon's secret fly-eating mechanic, suggests a precedent), what the
+  first unlockables actually are (skins for which species? which stat
+  upgrades?), and the save/persistence approach (local file via
+  `ConfigFile`/`FileAccess` is the natural Godot-native fit, no plugin
+  needed).
+- **Food chain system.** Newest idea, least scoped of all of these —
+  needs a design pass before any implementation: what "food chain" means
+  mechanically (do prey species flee predators? does eating other animals
+  grant buffs/currency/health like the Chameleon's fly-eating already
+  does? is there a formal predator/prey tier per species, or is it just
+  "anything can attack anything, enemies vs. playables already does that
+  informally"?). Likely overlaps with the Currency & progression earning
+  mechanic above and the "sea creatures" Future idea's own food-chain
+  implications (what do fish eat) — worth designing all three together
+  rather than in isolation.

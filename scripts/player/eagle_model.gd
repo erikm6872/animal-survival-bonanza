@@ -75,6 +75,14 @@ func _find_animation_player(node: Node) -> AnimationPlayer:
 ## Dividing the intended final position/radius by model_scale (i.e.
 ## multiplying by ~6.67) here corrects for that, since eagle_root has no
 ## scale of its own to absorb it.
+##
+## A second attempt used +Z as "forward," copying hitbox_offset's sign —
+## which put the eyes on the back of the head (facing the trailing camera
+## instead of the direction of travel). Tracing the actual Skeleton3D bones
+## (skeleton.get_bone_global_pose()) showed the spine/neck chain runs to
+## its highest, most-forward point at *negative* Z in this frame — matching
+## every other species' -Z-forward convention and revealing hitbox_offset's
+## sign was itself backwards (fixed alongside this in eagle_species.tres).
 func _build_eyes() -> void:
 	var white_mat := StandardMaterial3D.new()
 	white_mat.albedo_color = Color(1, 1, 1)
@@ -93,13 +101,13 @@ func _build_eyes() -> void:
 		var eye := MeshInstance3D.new()
 		eye.mesh = eye_mesh
 		eye.set_surface_override_material(0, white_mat)
-		eye.position = Vector3(side * 0.05, 0.08, 0.16) * model_scale_inverse
+		eye.position = Vector3(side * 0.05, 0.07, -0.13) * model_scale_inverse
 		eagle_root.add_child(eye)
 
 		var pupil := MeshInstance3D.new()
 		pupil.mesh = pupil_mesh
 		pupil.set_surface_override_material(0, pupil_mat)
-		pupil.position = Vector3(side * 0.05, 0.08, 0.18) * model_scale_inverse
+		pupil.position = Vector3(side * 0.05, 0.07, -0.15) * model_scale_inverse
 		eagle_root.add_child(pupil)
 
 func _recolor_surfaces() -> void:
