@@ -15,7 +15,11 @@ const FISH_SCALE: float = 0.03
 const SWIM_DEPTH: float = 0.4 ## below the water surface
 
 @export var fish_per_pond: int = 5
-@export var river_spawn_points: int = 5
+## Was 5 -- too sparse once the river itself grew from the map-size
+## increase (water_generator.gd's RIVER_LENGTH_HALF 100 -> 200) without
+## this scaling to match, same oversight already fixed once for the
+## mountain ring and biome populator.
+@export var river_spawn_points: int = 9
 @export var fish_per_river_point: int = 3
 @export var rng_seed: int = 20260829
 
@@ -33,9 +37,13 @@ func _ready() -> void:
 		for i in fish_per_pond:
 			_spawn_fish(scenes, rng, center3d, wander_radius)
 
+	# -150/150, not the full -200/200 river span (water_generator.gd's
+	# RIVER_LENGTH_HALF) -- that would start spawning fish in the steep
+	# waterfall/mountain stretch past WATERFALL_X (160), which doesn't
+	# read as a place fish would actually be.
 	var river_divisions := maxi(river_spawn_points - 1, 1)
 	for i in river_spawn_points:
-		var x: float = lerp(-80.0, 80.0, float(i) / float(river_divisions))
+		var x: float = lerp(-150.0, 150.0, float(i) / float(river_divisions))
 		var z := TerrainHeight.river_center_z(x)
 		var center3d := Vector3(x, TerrainHeight.RIVER_WATER_LEVEL - SWIM_DEPTH, z)
 		var wander_radius := TerrainHeight.RIVER_HALF_WIDTH * 0.8

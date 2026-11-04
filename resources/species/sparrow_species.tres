@@ -24,6 +24,6 @@ anim_dodge = "Fast_Flying"
 anim_hit_react = Array[String](["HitReact"])
 anim_ground_idle = "Ground_Idle"
 anim_hop = "Hop"
-hitbox_offset = Vector3(0, 0.05, 0.25)
+hitbox_offset = Vector3(0, 0.05, -0.25)
 attack_hit_start_fraction = 0.35
 attack_hit_end_fraction = 0.65

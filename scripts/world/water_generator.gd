@@ -152,11 +152,16 @@ func _build_waterfall() -> void:
 	mesh_inst.material_override = _water_material()
 	add_child(mesh_inst)
 
-func _water_material() -> StandardMaterial3D:
-	var mat := StandardMaterial3D.new()
-	mat.albedo_color = Color(0.2, 0.45, 0.6, 0.6)
-	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	mat.cull_mode = BaseMaterial3D.CULL_DISABLED ## visible from below too, since there's no swimming collision to keep the player out yet
-	mat.metallic = 0.2
-	mat.roughness = 0.1
-	return mat
+const WATER_SHADER := preload("res://shaders/water.gdshader")
+
+## Shared across every water mesh instance (river/pond/waterfall) rather
+## than one ShaderMaterial per mesh — they're visually identical, and
+## sharing means TIME-driven ripple animation runs from one uniform set
+## instead of being recomputed per-instance for no visual difference.
+static var _cached_material: ShaderMaterial
+
+func _water_material() -> ShaderMaterial:
+	if _cached_material == null:
+		_cached_material = ShaderMaterial.new()
+		_cached_material.shader = WATER_SHADER
+	return _cached_material
