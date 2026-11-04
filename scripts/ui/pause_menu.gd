@@ -1,19 +1,12 @@
 extends CanvasLayer
 
 @onready var menu_panel: Control = $MenuPanel
-@onready var settings_panel: Control = $SettingsPanel
+@onready var settings_panel: SettingsPanel = $SettingsPanel
 @onready var resume_button: Button = $MenuPanel/PanelContainer/MarginContainer/VBoxContainer/ResumeButton
 @onready var settings_button: Button = $MenuPanel/PanelContainer/MarginContainer/VBoxContainer/SettingsButton
 @onready var shop_button: Button = $MenuPanel/PanelContainer/MarginContainer/VBoxContainer/ShopButton
 @onready var change_animal_button: Button = $MenuPanel/PanelContainer/MarginContainer/VBoxContainer/ChangeAnimalButton
 @onready var quit_button: Button = $MenuPanel/PanelContainer/MarginContainer/VBoxContainer/QuitButton
-@onready var sensitivity_slider: HSlider = $SettingsPanel/PanelContainer/MarginContainer/VBoxContainer/SensitivityRow/SensitivitySlider
-@onready var fullscreen_button: Button = $SettingsPanel/PanelContainer/MarginContainer/VBoxContainer/FullscreenRow/FullscreenButton
-@onready var season_button: Button = $SettingsPanel/PanelContainer/MarginContainer/VBoxContainer/SeasonRow/SeasonButton
-@onready var hitbox_indicators_button: Button = $SettingsPanel/PanelContainer/MarginContainer/VBoxContainer/HitboxIndicatorsRow/HitboxIndicatorsButton
-@onready var health_bars_button: Button = $SettingsPanel/PanelContainer/MarginContainer/VBoxContainer/HealthBarsRow/HealthBarsButton
-@onready var wolf_color_picker: ColorPickerButton = $SettingsPanel/PanelContainer/MarginContainer/VBoxContainer/WolfColorRow/WolfColorPicker
-@onready var back_button: Button = $SettingsPanel/PanelContainer/MarginContainer/VBoxContainer/BackButton
 @onready var shop: Shop = $Shop
 
 var is_paused: bool = false
@@ -29,13 +22,7 @@ func _ready() -> void:
 	shop_button.pressed.connect(_on_shop_pressed)
 	change_animal_button.pressed.connect(_on_change_animal_pressed)
 	quit_button.pressed.connect(_on_quit_pressed)
-	back_button.pressed.connect(_on_back_pressed)
-	sensitivity_slider.value_changed.connect(_on_sensitivity_changed)
-	fullscreen_button.toggled.connect(_on_fullscreen_toggled)
-	season_button.toggled.connect(_on_season_toggled)
-	hitbox_indicators_button.toggled.connect(_on_hitbox_indicators_toggled)
-	health_bars_button.toggled.connect(_on_health_bars_toggled)
-	wolf_color_picker.color_changed.connect(_on_wolf_color_changed)
+	settings_panel.back_pressed.connect(_on_settings_back_pressed)
 	shop.closed.connect(_on_shop_closed)
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -44,7 +31,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	if shop.visible:
 		shop.close()
 	elif settings_panel.visible:
-		_on_back_pressed()
+		_on_settings_back_pressed()
 	else:
 		set_paused(not is_paused)
 
@@ -63,22 +50,9 @@ func _on_resume_pressed() -> void:
 func _on_settings_pressed() -> void:
 	menu_panel.visible = false
 	settings_panel.visible = true
-	var player := get_tree().get_first_node_in_group("player")
-	if player:
-		sensitivity_slider.value = player.mouse_sensitivity
-	var is_fullscreen := DisplayServer.window_get_mode() == DisplayServer.WINDOW_MODE_FULLSCREEN
-	fullscreen_button.set_pressed_no_signal(is_fullscreen)
-	fullscreen_button.text = "On" if is_fullscreen else "Off"
-	season_button.set_pressed_no_signal(GameState.is_winter)
-	season_button.text = "On" if GameState.is_winter else "Off"
-	hitbox_indicators_button.set_pressed_no_signal(GameState.show_hitbox_indicators)
-	hitbox_indicators_button.text = "On" if GameState.show_hitbox_indicators else "Off"
-	health_bars_button.set_pressed_no_signal(GameState.show_health_bars)
-	health_bars_button.text = "On" if GameState.show_health_bars else "Off"
-	if player:
-		wolf_color_picker.color = player.get_fur_color()
+	settings_panel.refresh()
 
-func _on_back_pressed() -> void:
+func _on_settings_back_pressed() -> void:
 	settings_panel.visible = false
 	menu_panel.visible = true
 
@@ -101,31 +75,3 @@ func _on_change_animal_pressed() -> void:
 
 func _on_quit_pressed() -> void:
 	get_tree().quit()
-
-func _on_sensitivity_changed(value: float) -> void:
-	var player := get_tree().get_first_node_in_group("player")
-	if player:
-		player.mouse_sensitivity = value
-
-func _on_fullscreen_toggled(is_fullscreen: bool) -> void:
-	DisplayServer.window_set_mode(
-		DisplayServer.WINDOW_MODE_FULLSCREEN if is_fullscreen else DisplayServer.WINDOW_MODE_WINDOWED
-	)
-	fullscreen_button.text = "On" if is_fullscreen else "Off"
-
-func _on_season_toggled(is_winter: bool) -> void:
-	GameState.set_winter(is_winter)
-	season_button.text = "On" if is_winter else "Off"
-
-func _on_hitbox_indicators_toggled(enabled: bool) -> void:
-	GameState.set_show_hitbox_indicators(enabled)
-	hitbox_indicators_button.text = "On" if enabled else "Off"
-
-func _on_health_bars_toggled(enabled: bool) -> void:
-	GameState.set_show_health_bars(enabled)
-	health_bars_button.text = "On" if enabled else "Off"
-
-func _on_wolf_color_changed(color: Color) -> void:
-	var player := get_tree().get_first_node_in_group("player")
-	if player:
-		player.set_fur_color(color)

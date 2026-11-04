@@ -1,7 +1,8 @@
-[gd_scene load_steps=4 format=3 uid="uid://cpause1menu1abc"]
+[gd_scene load_steps=5 format=3 uid="uid://cpause1menu1abc"]
 
 [ext_resource type="Script" path="res://scripts/ui/pause_menu.gd" id="1_script"]
 [ext_resource type="PackedScene" path="res://scenes/ui/shop.tscn" id="2_shop"]
+[ext_resource type="PackedScene" path="res://scenes/ui/settings_panel.tscn" id="3_settings"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
 bg_color = Color(0.08, 0.08, 0.08, 0.9)
@@ -72,131 +73,8 @@ text = "Change Animal"
 layout_mode = 2
 text = "Quit"
 
-[node name="SettingsPanel" type="Control" parent="."]
-anchor_right = 1.0
-anchor_bottom = 1.0
-
-[node name="PanelContainer" type="PanelContainer" parent="SettingsPanel"]
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -150.0
-offset_top = -140.0
-offset_right = 150.0
-offset_bottom = 140.0
-theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
-
-[node name="MarginContainer" type="MarginContainer" parent="SettingsPanel/PanelContainer"]
-layout_mode = 2
-
-[node name="VBoxContainer" type="VBoxContainer" parent="SettingsPanel/PanelContainer/MarginContainer"]
-layout_mode = 2
-theme_override_constants/separation = 14
-
-[node name="TitleLabel" type="Label" parent="SettingsPanel/PanelContainer/MarginContainer/VBoxContainer"]
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_font_sizes/font_size = 22
-horizontal_alignment = 1
-text = "Settings"
-
-[node name="SensitivityRow" type="HBoxContainer" parent="SettingsPanel/PanelContainer/MarginContainer/VBoxContainer"]
-layout_mode = 2
-theme_override_constants/separation = 10
-
-[node name="SensitivityLabel" type="Label" parent="SettingsPanel/PanelContainer/MarginContainer/VBoxContainer/SensitivityRow"]
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-text = "Mouse Sensitivity"
-
-[node name="SensitivitySlider" type="HSlider" parent="SettingsPanel/PanelContainer/MarginContainer/VBoxContainer/SensitivityRow"]
-custom_minimum_size = Vector2(140, 0)
-layout_mode = 2
-size_flags_horizontal = 3
-min_value = 0.001
-max_value = 0.01
-step = 0.0005
-value = 0.003
-
-[node name="FullscreenRow" type="HBoxContainer" parent="SettingsPanel/PanelContainer/MarginContainer/VBoxContainer"]
-layout_mode = 2
-theme_override_constants/separation = 10
-
-[node name="FullscreenLabel" type="Label" parent="SettingsPanel/PanelContainer/MarginContainer/VBoxContainer/FullscreenRow"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-text = "Fullscreen"
-
-[node name="FullscreenButton" type="Button" parent="SettingsPanel/PanelContainer/MarginContainer/VBoxContainer/FullscreenRow"]
-layout_mode = 2
-toggle_mode = true
-text = "Off"
-
-[node name="SeasonRow" type="HBoxContainer" parent="SettingsPanel/PanelContainer/MarginContainer/VBoxContainer"]
-layout_mode = 2
-theme_override_constants/separation = 10
-
-[node name="SeasonLabel" type="Label" parent="SettingsPanel/PanelContainer/MarginContainer/VBoxContainer/SeasonRow"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-text = "Winter"
-
-[node name="SeasonButton" type="Button" parent="SettingsPanel/PanelContainer/MarginContainer/VBoxContainer/SeasonRow"]
-layout_mode = 2
-toggle_mode = true
-text = "Off"
-
-[node name="HitboxIndicatorsRow" type="HBoxContainer" parent="SettingsPanel/PanelContainer/MarginContainer/VBoxContainer"]
-layout_mode = 2
-theme_override_constants/separation = 10
-
-[node name="HitboxIndicatorsLabel" type="Label" parent="SettingsPanel/PanelContainer/MarginContainer/VBoxContainer/HitboxIndicatorsRow"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-text = "Show Attack Hitboxes"
-
-[node name="HitboxIndicatorsButton" type="Button" parent="SettingsPanel/PanelContainer/MarginContainer/VBoxContainer/HitboxIndicatorsRow"]
-layout_mode = 2
-toggle_mode = true
-text = "On"
-
-[node name="HealthBarsRow" type="HBoxContainer" parent="SettingsPanel/PanelContainer/MarginContainer/VBoxContainer"]
-layout_mode = 2
-theme_override_constants/separation = 10
-
-[node name="HealthBarsLabel" type="Label" parent="SettingsPanel/PanelContainer/MarginContainer/VBoxContainer/HealthBarsRow"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-text = "Show Animal Health Bars"
-
-[node name="HealthBarsButton" type="Button" parent="SettingsPanel/PanelContainer/MarginContainer/VBoxContainer/HealthBarsRow"]
-layout_mode = 2
-toggle_mode = true
-text = "Off"
-
-[node name="WolfColorRow" type="HBoxContainer" parent="SettingsPanel/PanelContainer/MarginContainer/VBoxContainer"]
-layout_mode = 2
-theme_override_constants/separation = 10
-
-[node name="WolfColorLabel" type="Label" parent="SettingsPanel/PanelContainer/MarginContainer/VBoxContainer/WolfColorRow"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-text = "Fur Color"
-
-[node name="WolfColorPicker" type="ColorPickerButton" parent="SettingsPanel/PanelContainer/MarginContainer/VBoxContainer/WolfColorRow"]
-custom_minimum_size = Vector2(60, 28)
-layout_mode = 2
-edit_alpha = false
-
-[node name="BackButton" type="Button" parent="SettingsPanel/PanelContainer/MarginContainer/VBoxContainer"]
-layout_mode = 2
-text = "Back"
+[node name="SettingsPanel" parent="." instance=ExtResource("3_settings")]
+visible = false
 
 [node name="Shop" parent="." instance=ExtResource("2_shop")]
 layer = 201
