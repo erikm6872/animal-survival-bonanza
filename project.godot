@@ -15,6 +15,17 @@ run/main_scene="res://scenes/ui/home_screen.tscn"
 config/features=PackedStringArray("4.7", "Forward Plus")
 config/icon="res://icon.svg"
 
+[display]
+
+; No stretch mode was ever configured, so every menu's fixed-pixel-size
+; panels (character select, pause menu, shop, settings, home screen) were
+; laid out assuming a specific window size and never actually scaled to
+; smaller/larger ones -- "canvas_items" rescales the whole UI canvas to
+; fit the real window/screen, "expand" lets the aspect ratio adapt instead
+; of letterboxing.
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+
 [autoload]
 
 GameState="*res://scripts/core/game_state.gd"

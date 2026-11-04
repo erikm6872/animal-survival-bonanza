@@ -23,9 +23,9 @@ anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -180.0
-offset_top = -170.0
+offset_top = -280.0
 offset_right = 180.0
-offset_bottom = 170.0
+offset_bottom = 280.0
 theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
 
 [node name="MarginContainer" type="MarginContainer" parent="PanelContainer"]
@@ -42,6 +42,12 @@ theme_override_font_sizes/font_size = 26
 horizontal_alignment = 1
 text = "Choose Your Animal"
 
-[node name="CardContainer" type="VBoxContainer" parent="PanelContainer/MarginContainer/VBoxContainer"]
+[node name="CardScroll" type="ScrollContainer" parent="PanelContainer/MarginContainer/VBoxContainer"]
 layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="CardContainer" type="VBoxContainer" parent="PanelContainer/MarginContainer/VBoxContainer/CardScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
 theme_override_constants/separation = 12

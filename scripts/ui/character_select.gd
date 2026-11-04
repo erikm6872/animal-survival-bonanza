@@ -10,7 +10,7 @@ const SPECIES_PATHS: Array[String] = [
 	"res://resources/species/pelican_species.tres",
 ]
 
-@onready var card_container: VBoxContainer = $PanelContainer/MarginContainer/VBoxContainer/CardContainer
+@onready var card_container: VBoxContainer = $PanelContainer/MarginContainer/VBoxContainer/CardScroll/CardContainer
 
 func _ready() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
