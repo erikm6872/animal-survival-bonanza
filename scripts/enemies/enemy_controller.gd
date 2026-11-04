@@ -124,6 +124,7 @@ func _on_died(_source: Node) -> void:
 	hitbox_open = false
 	hitbox.deactivate()
 	anim_player.play(species.anim_death)
+	GameState.add_currency(species.currency_reward)
 	await get_tree().create_timer(DEATH_RESPAWN_DELAY).timeout
 	_respawn()
 

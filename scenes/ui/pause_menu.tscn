@@ -1,6 +1,7 @@
-[gd_scene load_steps=3 format=3 uid="uid://cpause1menu1abc"]
+[gd_scene load_steps=4 format=3 uid="uid://cpause1menu1abc"]
 
 [ext_resource type="Script" path="res://scripts/ui/pause_menu.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://scenes/ui/shop.tscn" id="2_shop"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
 bg_color = Color(0.08, 0.08, 0.08, 0.9)
@@ -58,6 +59,10 @@ text = "Resume"
 [node name="SettingsButton" type="Button" parent="MenuPanel/PanelContainer/MarginContainer/VBoxContainer"]
 layout_mode = 2
 text = "Settings"
+
+[node name="ShopButton" type="Button" parent="MenuPanel/PanelContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Shop"
 
 [node name="ChangeAnimalButton" type="Button" parent="MenuPanel/PanelContainer/MarginContainer/VBoxContainer"]
 layout_mode = 2
@@ -192,3 +197,6 @@ edit_alpha = false
 [node name="BackButton" type="Button" parent="SettingsPanel/PanelContainer/MarginContainer/VBoxContainer"]
 layout_mode = 2
 text = "Back"
+
+[node name="Shop" parent="." instance=ExtResource("2_shop")]
+layer = 201

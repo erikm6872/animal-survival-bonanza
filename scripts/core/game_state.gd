@@ -43,3 +43,55 @@ func set_show_health_bars(value: bool) -> void:
 		return
 	show_health_bars = value
 	show_health_bars_changed.emit(show_health_bars)
+
+## Meta-progression wallet, spent in the Shop (scripts/ui/shop.gd) on
+## Unlockables (scripts/core/unlockable.gd). Earned from confirmed enemy
+## kills — see EnemySpecies.currency_reward and enemy_controller.gd's
+## _on_died(). Persisted to a local save file (no server/accounts, matches
+## this project's no-login design everywhere else); owned_unlockable_ids
+## lives in the same file so it's one write, not two.
+const SAVE_PATH := "user://save.cfg"
+
+signal currency_changed(amount: int)
+var currency: int = 0
+var owned_unlockable_ids: Dictionary = {} # StringName id -> true
+
+func _ready() -> void:
+	_load_save()
+
+func add_currency(amount: int) -> void:
+	if amount <= 0:
+		return
+	currency += amount
+	currency_changed.emit(currency)
+	_save()
+
+## Returns false (spending nothing) if currency is short — callers should
+## check this before marking anything as purchased.
+func spend_currency(amount: int) -> bool:
+	if amount <= 0 or amount > currency:
+		return false
+	currency -= amount
+	currency_changed.emit(currency)
+	_save()
+	return true
+
+func is_unlocked(id: StringName) -> bool:
+	return owned_unlockable_ids.has(id)
+
+func unlock(id: StringName) -> void:
+	owned_unlockable_ids[id] = true
+	_save()
+
+func _load_save() -> void:
+	var config := ConfigFile.new()
+	if config.load(SAVE_PATH) != OK:
+		return # no save file yet -- fresh start, defaults above stand
+	currency = config.get_value("progression", "currency", 0)
+	owned_unlockable_ids = config.get_value("progression", "owned_unlockable_ids", {})
+
+func _save() -> void:
+	var config := ConfigFile.new()
+	config.set_value("progression", "currency", currency)
+	config.set_value("progression", "owned_unlockable_ids", owned_unlockable_ids)
+	config.save(SAVE_PATH)

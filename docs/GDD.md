@@ -135,6 +135,81 @@ play. Multiplayer is a long-term goal, not a v1 requirement.
   - **Ability/stat upgrades** — speed, health, bite damage, stamina, etc.
 - No premium currency, no real-money purchases anywhere in the design.
 
+### Implementation scope (decided, not yet built)
+
+Decisions below resolve the three open questions this section used to flag.
+What specific items cost currency is still unscoped — this is the
+plumbing (earning, wallet, persistence) that any future unlockable
+content plugs into, not a specific shop list.
+
+- **Earning: defeating enemies.** `EnemySpecies` gains a
+  `currency_reward: int` field; `enemy_controller.gd`'s existing
+  `damageable.died` handler (`_on_died`) awards it to the attacking
+  player (the `source` the `died` signal already carries — see
+  `damageable.gd`) alongside the existing respawn-timer logic. Not
+  per-hit, not passive-over-time — only a confirmed kill pays out, same
+  granularity as the Chameleon's devour mechanic.
+- **Wallet: `GameState.currency: int`**, autoload-held like
+  `selected_species`/`show_hitbox_indicators`, signal-backed
+  (`currency_changed`) so a future HUD counter or shop screen can react
+  without polling.
+- **Persistence: a local save file**, Godot-native (`ConfigFile` to
+  `user://save.cfg` — no server, no accounts, consistent with this
+  project's no-login design everywhere else). `GameState` loads it once
+  at startup and writes it back whenever `currency` changes (debounced,
+  not every frame) and on quit as a backstop. This file is also the
+  natural home for whatever unlock-ownership flags come later, so it's
+  worth building as a small `SaveData` resource (currency + a
+  `Dictionary` of owned unlockable ids) rather than a single raw int, even
+  though only currency has a reader/writer today.
+- **Unlockable data model, deliberately generic since content isn't
+  chosen yet:** an `Unlockable` `Resource` (`id: StringName`,
+  `display_name: String`, `cost: int`,
+  `kind: enum {COSMETIC, STAT_UPGRADE, SPECIES}`) plus a plain `.tres`
+  per item, mirroring how `AnimalSpecies`/`EnemySpecies` already work.
+  A shop/unlock screen — lives on the new Home Screen (see below), not
+  the pause menu or character select — lists these, checks
+  `GameState.currency >= cost` and `not owned`, and on purchase deducts
+  currency, marks it owned in the save data, and applies its effect —
+  which differs by `kind` and is exactly the part that can't be built
+  until the first real item is chosen (a cosmetic swaps a material color
+  like the Wolf's fur picker already does; a stat upgrade needs a hook
+  into `AnimalSpecies` stats becoming non-fixed per player; a species
+  unlock needs character_select.gd to gate roster entries by ownership).
+- **Not resolved on purpose:** what the first unlockables actually are.
+  Building the wallet/save/earning plumbing above doesn't require
+  knowing this yet, and the `Unlockable` resource model is designed so
+  adding the first real item later is just a new `.tres` plus whatever
+  `kind`-specific effect code it needs — not a rearchitecture.
+
+## Home screen (scoped, not yet built)
+
+New scene, `scenes/ui/home_screen.tscn`, deliberately basic: one
+background image and four buttons (Start, Shop, Settings, Quit), no
+animation/polish pass. Becomes the project's actual boot scene (replacing
+character select as the entry point in `project.godot`'s
+`run/main_scene`) — character select is still reached, just one step
+later, via Start.
+
+- **Start** → `character_select.tscn` (today's entry point, unchanged
+  otherwise).
+- **Shop** → the unlockables screen from "Currency & progression" above —
+  lives here specifically so it's reachable without committing to a
+  species first, and so currency/unlocks feel like meta-progression
+  around runs rather than a mid-run menu.
+- **Settings** → the same settings this project already has in the pause
+  menu's Settings panel (`pause_menu.tscn`/`pause_menu.gd` — sensitivity,
+  fullscreen, season, hitbox indicators, health bars, fur color). Needs
+  its own small scoping pass when built: duplicate the panel, or
+  factor the existing one out into a shared scene both the home screen
+  and pause menu instantiate? Factoring out is less duplication but a
+  bigger first change; duplicating is faster now and easy to consolidate
+  later if the two drift apart. Leaning toward factoring out since this
+  project already leans on shared autoload state (`GameState`) for
+  exactly this kind of cross-screen consistency — worth confirming before
+  building.
+- **Quit** → `get_tree().quit()`, same as the pause menu's Quit button.
+
 ## Art direction
 
 - Low-poly stylized. Chosen for fast iteration, forgiving of imperfect
@@ -434,22 +509,14 @@ Not scoped or scheduled — captured here so they aren't lost before v1
 - Whether additional animals (for enemies or future playable species) come
   from the same Quaternius pack already partially downloaded, or a new
   source.
-- **Home screen.** No title/main-menu scene exists yet — the game currently
-  boots straight into character select. Needs scoping: New Game/Settings/
-  Quit at minimum; whether it also needs a "Continue" slot depends on
-  whether a save system exists by then (see Currency & progression below,
-  which has the same open dependency).
-- **Currency & progression implementation.** The design is sketched above
-  ("Currency & progression" section: cosmetic unlocks + ability/stat
-  upgrades, no real-money purchases) but nothing is built — no currency
-  balance, no earning mechanic, no shop/unlock UI, and critically no save
-  system yet to persist any of it across sessions. Needs scoping: how
-  currency is earned (per-kill? per-session? eating prey, like the
-  Chameleon's secret fly-eating mechanic, suggests a precedent), what the
-  first unlockables actually are (skins for which species? which stat
-  upgrades?), and the save/persistence approach (local file via
-  `ConfigFile`/`FileAccess` is the natural Godot-native fit, no plugin
-  needed).
+- **Home screen** is now scoped — see "Home screen (scoped, not yet
+  built)" above (Start/Shop/Settings/Quit, becomes the new boot scene).
+  Still open: factor the Settings panel out of the pause menu into a
+  shared scene, or duplicate it for the home screen.
+- **Currency & progression implementation** is now scoped (earning,
+  wallet, save format) — see "Implementation scope" under "Currency &
+  progression" above. Still genuinely open: what the first unlockables
+  are, and where the shop/unlock screen lives in the UI.
 - **Food chain system.** Newest idea, least scoped of all of these —
   needs a design pass before any implementation: what "food chain" means
   mechanically (do prey species flee predators? does eating other animals

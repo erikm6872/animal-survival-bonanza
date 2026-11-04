@@ -38,3 +38,9 @@ class_name EnemySpecies
 @export var hitbox_radius: float = 0.5
 @export var attack_hit_start_fraction: float = 0.4
 @export var attack_hit_end_fraction: float = 0.65
+
+## Currency awarded to GameState.currency on a confirmed kill (see
+## enemy_controller.gd's _on_died()) -- not per-hit, not passive. 0 =
+## no reward, so existing EnemySpecies resources stay inert by default
+## until tuned.
+@export var currency_reward: int = 0
