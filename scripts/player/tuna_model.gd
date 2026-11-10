@@ -42,7 +42,11 @@ func _build_body(root: Node3D) -> void:
 	mat.albedo_texture = texture
 	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
 	mat.alpha_scissor_threshold = 0.5
-	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	# Default (CULL_BACK), not CULL_DISABLED -- each quad's winding already
+	# faces outward on its own physical side (verified below), and with only
+	# ~0.08 units between the two flanks, rendering backfaces too caused the
+	# far quad's unlit backface to bleed through/z-fight with the near one,
+	# which read as "one side right, the other facing backwards."
 
 	# Right flank: normal points +X, UVs read head-to-tail left-to-right,
 	# matching the photo as-is.
