@@ -47,6 +47,15 @@ func _build_body() -> void:
 	head_mesh.height = 0.32
 	_make_part(head_mesh, BODY_TOP_COLOR, self, Vector3(0, 0.02, 0.42))
 
+	# A tapering snout at the very front -- without this the body reads as a
+	# symmetric capsule with no obvious "pointy end", which is what made the
+	# model hard to read as facing one particular way.
+	var snout_mesh := CylinderMesh.new()
+	snout_mesh.top_radius = 0.0
+	snout_mesh.bottom_radius = 0.1
+	snout_mesh.height = 0.22
+	_make_part(snout_mesh, BODY_TOP_COLOR, self, Vector3(0, 0.0, 0.58), Vector3(deg_to_rad(90), 0, 0))
+
 	var eye_mesh := SphereMesh.new()
 	eye_mesh.radius = 0.03
 	eye_mesh.height = 0.06
@@ -60,9 +69,14 @@ func _build_body() -> void:
 	tail.name = "Tail"
 	tail.position = Vector3(0, 0, -0.6)
 	add_child(tail)
+	# No extra rotation here -- size.x is already the thin left-right
+	# dimension, size.y the vertical height, size.z the length trailing back
+	# along the swim axis, which is what a vertical caudal fin needs. The
+	# previous 90-degree Y rotation swapped X and Z, turning the fin into a
+	# wide blade sticking out sideways instead of trailing straight back.
 	var tail_mesh := PrismMesh.new()
 	tail_mesh.size = Vector3(0.05, 0.5, 0.3)
-	_make_part(tail_mesh, FIN_COLOR, tail, Vector3(0, 0, -0.1), Vector3(0, deg_to_rad(90), 0))
+	_make_part(tail_mesh, FIN_COLOR, tail, Vector3(0, 0, -0.1))
 
 func _build_fins() -> void:
 	var dorsal_mesh := PrismMesh.new()
