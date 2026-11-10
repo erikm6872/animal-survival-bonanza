@@ -49,7 +49,10 @@ jobs:
       - name: Version the build to bust stale browser caches
         run: |
           cd build/web
-          VER="${GITHUB_SHA:0:7}"
+          # `${GITHUB_SHA:0:7}` is bash-only syntax; the godot-ci container's
+          # `run:` steps execute under plain POSIX sh, which doesn't support
+          # it ("Bad substitution") -- `cut` works under either.
+          VER="$(echo "$GITHUB_SHA" | cut -c1-7)"
           for f in index.*; do
             mv "$f" "game-$VER${f#index}"
           done
