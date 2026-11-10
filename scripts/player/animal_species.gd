@@ -17,6 +17,11 @@ class_name AnimalSpecies
 ## of this same class, a real circular dependency).
 @export var player_scene: PackedScene
 
+## Which map this species spawns into from character select -- almost every
+## species shares the land map; the Tuna is the first to point elsewhere
+## (the ocean biome), since it has no way to exist on land.
+@export var start_scene: String = "res://scenes/world/test_world.tscn"
+
 ## Path (relative to the instanced model's root) to the MeshInstance3D whose
 ## surfaces get tinted by the fur color picker. Empty = no fur tinting.
 @export var fur_mesh_path: NodePath = ^""

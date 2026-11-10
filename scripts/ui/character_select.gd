@@ -8,6 +8,7 @@ const SPECIES_PATHS: Array[String] = [
 	"res://resources/species/chameleon_species.tres",
 	"res://resources/species/komodo_dragon_species.tres",
 	"res://resources/species/pelican_species.tres",
+	"res://resources/species/tuna_species.tres",
 ]
 
 @onready var card_container: VBoxContainer = $PanelContainer/MarginContainer/VBoxContainer/CardScroll/CardContainer
@@ -30,4 +31,4 @@ func _add_card(species: AnimalSpecies) -> void:
 
 func _on_species_chosen(species: AnimalSpecies) -> void:
 	GameState.selected_species = species
-	get_tree().change_scene_to_file("res://scenes/world/test_world.tscn")
+	get_tree().change_scene_to_file(species.start_scene)
