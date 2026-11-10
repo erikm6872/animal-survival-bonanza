@@ -48,15 +48,20 @@ func _build_body(root: Node3D) -> void:
 	# far quad's unlit backface to bleed through/z-fight with the near one,
 	# which read as "one side right, the other facing backwards."
 
-	# Right flank: normal points +X, UVs read head-to-tail left-to-right,
-	# matching the photo as-is.
+	# Right flank: normal points +X. Left flank: normal points -X (different
+	# winding order, so each only renders when viewed from its own physical
+	# side -- see _make_side_quad). Both use the IDENTICAL (non-flipped) UV
+	# mapping: an earlier version flipped U for the left flank meaning to
+	# "mirror" it, but a flat 2D side-profile photo has no genuine left-right
+	# content to mirror -- flipping U instead moved that flank's head content
+	# to the opposite (tail) end of the geometry, so the two flanks' heads
+	# landed a full body-length apart. Identical UVs on both, each only
+	# visible from its own side via culling, is what actually gives a
+	# consistent, correctly-aligned result from either viewing angle.
 	_make_side_quad(root, SIDE_GAP, mat, false)
-	# Left flank: normal points -X, UVs mirrored (U flipped) so this side
-	# shows the same photo as a mirror image -- without the flip, this face
-	# would show the tail where the other side shows the head.
 	_make_side_quad(root, -SIDE_GAP, mat, true)
 
-func _make_side_quad(root: Node3D, x: float, mat: StandardMaterial3D, mirrored: bool) -> void:
+func _make_side_quad(root: Node3D, x: float, mat: StandardMaterial3D, faces_negative_x: bool) -> void:
 	var half_l := LENGTH / 2.0
 	var half_h := HEIGHT / 2.0
 	# Head at +Z, tail at -Z (this project's authored-facing convention).
@@ -65,17 +70,15 @@ func _make_side_quad(root: Node3D, x: float, mat: StandardMaterial3D, mirrored: 
 	var head_top := Vector3(x, half_h, half_l)
 	var tail_top := Vector3(x, half_h, -half_l)
 
-	var u_head := 1.0 if mirrored else 0.0
-	var u_tail := 0.0 if mirrored else 1.0
-	var uv_head_bottom := Vector2(u_head, 1.0)
-	var uv_tail_bottom := Vector2(u_tail, 1.0)
-	var uv_head_top := Vector2(u_head, 0.0)
-	var uv_tail_top := Vector2(u_tail, 0.0)
+	var uv_head_bottom := Vector2(0.0, 1.0)
+	var uv_tail_bottom := Vector2(1.0, 1.0)
+	var uv_head_top := Vector2(0.0, 0.0)
+	var uv_tail_top := Vector2(1.0, 0.0)
 
 	var vertices := PackedVector3Array()
 	var uvs := PackedVector2Array()
 	var indices := PackedInt32Array()
-	if mirrored:
+	if faces_negative_x:
 		# Winding order verified via a headless debug script computing the
 		# face normal -- this order faces -X, the other faces +X.
 		vertices.append_array([head_bottom, tail_bottom, head_top, tail_top])
@@ -86,7 +89,7 @@ func _make_side_quad(root: Node3D, x: float, mat: StandardMaterial3D, mirrored: 
 		uvs.append_array([uv_head_bottom, uv_head_top, uv_tail_bottom, uv_tail_top])
 		indices.append_array([0, 1, 2, 2, 1, 3])
 
-	var normal := Vector3(-1, 0, 0) if mirrored else Vector3(1, 0, 0)
+	var normal := Vector3(-1, 0, 0) if faces_negative_x else Vector3(1, 0, 0)
 	var normals := PackedVector3Array([normal, normal, normal, normal])
 
 	var arrays := []
