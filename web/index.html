@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Animal Survival Bonanza</title>
+<style>
+html, body {
+	margin: 0;
+	height: 100%;
+	background: #000;
+	color: #ccc;
+	font-family: sans-serif;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+</style>
+</head>
+<body>
+<!--
+	This page is a tiny, hand-written loader -- NOT the Godot web export's own
+	index.html (that gets built as game-<commit sha>.html by the deploy
+	workflow, a different URL every deploy). It exists for exactly one
+	reason: this file barely ever changes, so the browser caching *it* is
+	harmless, but the manifest.json fetch below uses `cache: 'no-store'` to
+	force a real network round-trip every time, which is the only lever we
+	have to guarantee freshness on a static host like GitHub Pages (no
+	custom Cache-Control headers available). That fetch tells us the latest
+	build's actual filename, so even a long-stale cached copy of this exact
+	page still always redirects to the current build instead of an old
+	cached one -- this is what was needed to stop a Chromebook from loading
+	a stale cached build after each deploy (see
+	docs/wiki/Design-Decisions.md#web-build-cache-busting).
+-->
+<div id="loading">Loading Animal Survival Bonanza&hellip;</div>
+<script>
+fetch('manifest.json', { cache: 'no-store' })
+	.then((response) => response.json())
+	.then((manifest) => {
+		window.location.replace(manifest.entry + '?v=' + manifest.version);
+	})
+	.catch((err) => {
+		document.getElementById('loading').textContent = 'Failed to load game manifest: ' + err;
+	});
+</script>
+</body>
+</html>

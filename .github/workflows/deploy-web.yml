@@ -38,6 +38,25 @@ jobs:
           mkdir -v -p build/web
           godot --headless --verbose --export-release "Web" "$(pwd)/build/web/index.html"
 
+      # Renames the Godot export's output (index.html/.js/.wasm/.pck/...) to
+      # include this commit's SHA, so every deploy gets a brand-new set of
+      # URLs that can never collide with a stale cached copy of the previous
+      # build. web/index.html (committed, barely ever changes) replaces the
+      # export's own index.html as the stable entry point -- it fetches
+      # manifest.json with `cache: 'no-store'` to always discover the
+      # current versioned filename, then redirects there. See
+      # docs/wiki/Design-Decisions.md#web-build-cache-busting.
+      - name: Version the build to bust stale browser caches
+        run: |
+          cd build/web
+          VER="${GITHUB_SHA:0:7}"
+          for f in index.*; do
+            mv "$f" "game-$VER${f#index}"
+          done
+          sed -i "s/index\./game-$VER./g; s/\"executable\":\"index\"/\"executable\":\"game-$VER\"/" "game-$VER.html"
+          printf '{"version": "%s", "entry": "game-%s.html"}\n' "$VER" "$VER" > manifest.json
+          cp "$GITHUB_WORKSPACE/web/index.html" index.html
+
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v5
         with:

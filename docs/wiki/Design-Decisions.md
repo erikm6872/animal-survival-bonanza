@@ -268,6 +268,27 @@ rather than editing history.
   anything local-machine-specific (keystore paths, absolute paths); it had
   none.
 
+## Web build cache-busting
+
+- **Commit-SHA-versioned build filenames + a tiny fetch-based bootstrap
+  page, not cache-control headers.** GitHub Pages gives no way to set
+  custom HTTP response headers, so there's no server-side lever to force
+  browsers to re-fetch a changed build (the actual problem reported: a
+  Chromebook kept loading an old cached build after a deploy, with no easy
+  way to force a refresh). The deploy workflow now renames every exported
+  file (`index.html`/`.js`/`.wasm`/`.pck`/etc.) to `game-<short sha>.*`, so
+  each deploy's real game files live at URLs that have never been
+  requested before and can't collide with anything a browser has cached
+  from a previous deploy. `web/index.html` (hand-written, checked into the
+  repo, copied over the export's own `index.html` by the workflow) is the
+  one thing still served at the stable root URL — it barely ever changes,
+  so a browser caching *that* is harmless, and all it does is
+  `fetch('manifest.json', { cache: 'no-store' })` to learn the current
+  build's actual filename before redirecting there. `cache: 'no-store'`
+  forces a real network round-trip (and, per HTTP spec, forces any
+  compliant CDN cache to revalidate with the origin) every time, which is
+  the only remaining lever once response headers aren't an option.
+
 ## Documentation
 
 - **A technical wiki, kept in two places on purpose.** `docs/wiki/` lives
