@@ -150,6 +150,29 @@ rather than editing history.
   scope for landing the base species. Reuses `player.tscn`/
   `player_controller.gd` as-is for now; see "Next steps" in
   `docs/GDD.md`.
+- **The Tuna is photo-textured, not primitive-mesh geometry.** Stakeholder
+  feedback ("the tuna doesn't look like a tuna," from an animal buff) asked
+  for a real photo as the body texture. The reference photo supplied was
+  watermarked Adobe Stock content — unusable in an MIT-licensed,
+  redistributable repo — so a public-domain NOAA yellowfin photo was
+  sourced instead (see `assets/textures/ATTRIBUTION.md`). The photo's
+  alpha silhouette provides the snout, fins, finlets, and forked tail for
+  free, so there's no hand-built fin geometry at all.
+- **The Tuna's volume comes from inflated photo sheets plus an
+  alpha-derived core, not a modeled body.** Flat mirrored cutout quads
+  looked two-dimensional, so each flank is a subdivided sheet bulged
+  outward by an elliptical thickness profile (flat in the fin regions,
+  where the bulge fades to zero). The sheets never close across the
+  centerline, which made the fish a hollow see-through lens from dead
+  ahead/astern (the chase camera's angle) — filled by a dark interior
+  solid whose per-slice center/depth are measured from the texture's own
+  alpha channel at build time, so it follows the real silhouette and
+  can't poke out through transparent texels the way a hand-guessed
+  ellipsoid did. Two hard-won rules for this technique: both flanks must
+  use **identical** (non-flipped) UVs — "mirroring" a flat side-profile
+  photo just relocates head content to the tail end — and the flank
+  material must keep default backface culling, since double-siding
+  near-coincident sheets makes the far one bleed through the near one.
 
 ## World generation
 
