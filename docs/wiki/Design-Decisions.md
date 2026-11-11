@@ -196,6 +196,26 @@ rather than editing history.
   to meet another procedural piece of geometry, matching its actual math
   (not just eyeballing a similar shape) is what makes it hold together
   from every angle**, not just the angle it was screenshotted from.
+- **Ocean seafloor decor: shader-animated seaweed, MultiMesh coral,
+  reused land rocks, no collision.** Rocks reuse the CC0 nature-kit
+  models already shipped for the land map; seaweed and coral are
+  procedural. The seaweed sway lives entirely in a vertex shader
+  (`shaders/seaweed.gdshader`, phase keyed off world position so blades
+  drift out of step) so hundreds of blades animate with zero per-frame
+  script work — important for the Chromebook web build. Seaweed and coral
+  are MultiMesh batches (one draw call per kind). Decor gets **no
+  collision**: the swim controller's seafloor clearance already keeps the
+  player just above the floor, and collision would snag the swim clamp
+  rather than add anything. The ocean also hides a few fixed-position
+  easter eggs — locations deliberately not documented here, since this
+  wiki is public and spoiling them defeats the point. One technique note:
+  objects "buried" in a slope must be aligned to the local floor normal
+  and sunk along it, or the whole downhill face ends up exposed.
+- **MultiMesh instance data can't be verified headlessly.** The dummy
+  rendering server used by `--headless` doesn't retain MultiMesh buffers,
+  so `get_instance_transform()` reads back zeros — placement checks that
+  touch MultiMesh must run under the real renderer (`DISPLAY=:0`), the
+  same way screenshot verification already does.
 
 ## Hostile wildlife
 
