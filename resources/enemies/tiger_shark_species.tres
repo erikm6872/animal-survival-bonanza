@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="EnemySpecies" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/enemies/enemy_species.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/tiger_shark_model.tscn" id="2_model"]
+
+[resource]
+script = ExtResource("1_script")
+display_name = "Tiger Shark"
+model_scene = ExtResource("2_model")
+model_scale = 1.3
+max_health = 140.0
+attack_damage = 22.0
+walk_speed = 2.5
+chase_speed = 11.0
+detection_radius = 18.0
+attack_range = 2.2
+leash_radius = 32.0
+anim_idle = "Swim_Idle"
+anim_chase = "Chase"
+anim_attack = "Bite"
+anim_death = "Death"
+anim_hit_react = Array[String](["HitReact"])
+hitbox_offset = Vector3(0, 0, -1.3)
+hitbox_radius = 0.5
+attack_hit_start_fraction = 0.3
+attack_hit_end_fraction = 0.6
+currency_reward = 35

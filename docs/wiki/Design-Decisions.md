@@ -255,6 +255,38 @@ rather than editing history.
   whether the state machine reached the ATTACK state — a reminder that
   "the state machine did the right thing" and "the mechanic actually
   works" are different claims, and worth verifying separately.
+- **The ocean's hostile wildlife (Tiger Shark) gets its own
+  `ocean_enemy_controller.gd`, not a reuse of `enemy_controller.gd`.**
+  Same shape as the land/flight movement-controller split: a shark chases
+  in full 3D (closing distance on all three axes, clamped between the
+  seafloor and the surface via `OceanHeight`, like the Tuna's own
+  `swim_controller.gd`) rather than flattening to the XZ plane and relying
+  on gravity/floor collision the way every land enemy does. The
+  idle/chase/attack/dead state machine, `EnemySpecies` schema, and
+  `Damageable`/`Hitbox`/`HealthBar3D` wiring are otherwise identical and
+  deliberately kept that way — only the movement model differs.
+- **The Tiger Shark is photo-textured with the exact same inflated-sheet
+  + alpha-derived-core technique as the playable Tuna** (requested
+  explicitly, rather than left as a judgment call) — see
+  `scripts/enemies/tiger_shark_model.gd`, which differs from
+  `tuna_model.gd` only in its proportions and source photo, not its
+  approach.
+- **The shark's source photo needed a hand-traced cutout, not an
+  automatic one.** Unlike the Tuna's photo (already published with an
+  alpha channel by a Commons contributor), the only suitable public-domain
+  tiger shark photo found (same NOAA/SEFSC Pascagoula collection, see
+  `assets/textures/ATTRIBUTION.md`) was a flat, un-extracted shot of a
+  shark lying on a boat deck. Two automatic approaches were tried and
+  both failed the same way: a neighbor-to-neighbor flood fill leaked
+  through the silhouette because parts of the shark's grey flank are
+  genuinely close in color to the blue-grey deck, and an edge-detection
+  "wall" flood fill failed because the photo's JPEG/sensor noise produced
+  edge-strength speckle comparable to the real outline once blurred enough
+  to suppress false edges. The outline was traced by hand instead — as a
+  polygon, refined by overlaying it on the source photo and checking
+  specific regions against raw pixel brightness samples rather than eyeballing
+  alone — then supersampled 2x before downscaling, for anti-aliased edges
+  without needing a smarter segmentation algorithm.
 
 ## Quality of life
 
