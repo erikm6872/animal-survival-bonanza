@@ -1,11 +1,10 @@
-[gd_scene load_steps=10 format=3 uid="uid://c2ocnwrld001"]
+[gd_scene load_steps=9 format=3 uid="uid://c2ocnwrld001"]
 
 [ext_resource type="Script" path="res://scripts/world/player_spawner.gd" id="1_player_spawner"]
 [ext_resource type="Script" path="res://scripts/world/ocean_floor_generator.gd" id="2_floor_gen"]
 [ext_resource type="Script" path="res://scripts/world/ocean_water_generator.gd" id="3_water_gen"]
 [ext_resource type="Script" path="res://scripts/world/ocean_fish_spawner.gd" id="4_fish_spawner"]
 [ext_resource type="Script" path="res://scripts/world/ocean_floor_decorator.gd" id="5_floor_decor"]
-[ext_resource type="Script" path="res://scripts/world/ocean_enemy_spawner.gd" id="6_enemy_spawner"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_1"]
 
@@ -50,6 +49,3 @@ script = ExtResource("4_fish_spawner")
 
 [node name="FloorDecor" type="Node3D" parent="."]
 script = ExtResource("5_floor_decor")
-
-[node name="Enemies" type="Node3D" parent="."]
-script = ExtResource("6_enemy_spawner")

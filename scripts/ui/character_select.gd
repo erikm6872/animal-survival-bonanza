@@ -9,6 +9,7 @@ const SPECIES_PATHS: Array[String] = [
 	"res://resources/species/komodo_dragon_species.tres",
 	"res://resources/species/pelican_species.tres",
 	"res://resources/species/tuna_species.tres",
+	"res://resources/species/tiger_shark_species.tres",
 ]
 
 @onready var card_container: VBoxContainer = $PanelContainer/MarginContainer/VBoxContainer/CardScroll/CardContainer

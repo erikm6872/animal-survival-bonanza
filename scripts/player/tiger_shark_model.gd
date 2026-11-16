@@ -20,8 +20,12 @@ extends Node3D
 ## pre-extracted.
 ##
 ## Authored facing +Z, flipped via a "Visual" child node -- same reasoning
-## as tuna_model.gd: whatever spawns this (ocean_enemy_controller.gd)
-## overwrites this node's own transform right after instancing it.
+## as tuna_model.gd: swim_controller.gd's _spawn_model() overwrites this
+## node's own transform right after instancing it.
+##
+## A playable species, not hostile wildlife -- see tiger_shark_species.tres
+## (resources/species/) and swimming_player.tscn, the same controller the
+## Tuna uses.
 
 const TEXTURE_PATH := "res://assets/textures/tiger_shark_side.png"
 
@@ -68,6 +72,7 @@ func _build_body(root: Node3D) -> void:
 	_make_side_sheet(root, 1.0, mat)
 	_make_side_sheet(root, -1.0, mat)
 	_build_core(root, texture)
+	_build_rim(root, texture)
 
 func _half_thickness(y: float, z: float) -> float:
 	var yn := absf(y) / (HEIGHT / 2.0 * BODY_HALF_HEIGHT_FRACTION)
@@ -225,13 +230,99 @@ func _build_core(root: Node3D, texture: Texture2D) -> void:
 	mesh_instance.material_override = mat
 	root.add_child(mesh_instance)
 
+## The two flank sheets are textured rectangles clipped by alpha-scissor in
+## the shader, not by real mesh edges -- so wherever the opaque silhouette
+## (fin tips, snout, tail) runs close to the sheet's dorsal/ventral border,
+## there's nothing but open air between the two flanks there, and a
+## shallow enough viewing angle looks straight through the model at that
+## edge. The Core fills the fat midsection but deliberately stays narrower
+## than the silhouette (CORE_HEIGHT_SHRINK) and stops short of the tail
+## fork (CORE_MAX_U), so it doesn't reach any of those edges either. This
+## traces the silhouette's actual top and bottom boundary (same alpha scan
+## _build_core uses, but the true extremes, not a shrunken approximation)
+## and stitches a thin strip connecting the two flanks exactly along it --
+## plus a closing quad at the nose and tail tip -- sealing the perimeter
+## the Core was never meant to reach.
+func _build_rim(root: Node3D, texture: Texture2D) -> void:
+	var img := texture.get_image()
+	if img.is_compressed():
+		img.decompress()
+	var img_w := img.get_width()
+	var img_h := img.get_height()
+	var half_l := LENGTH / 2.0
+	var half_h := HEIGHT / 2.0
+
+	var top_pts: Array[Vector2] = [] # (y, z) pairs along the dorsal boundary
+	var bottom_pts: Array[Vector2] = [] # along the ventral boundary
+	for c in range(LENGTH_SEGMENTS + 1):
+		var u := c / float(LENGTH_SEGMENTS)
+		var col := int(round(u * (img_w - 1)))
+		var top_row := -1
+		var bottom_row := -1
+		for row in range(img_h):
+			if img.get_pixel(col, row).a > 0.5:
+				if top_row < 0:
+					top_row = row
+				bottom_row = row
+		if top_row < 0:
+			continue
+		var z := half_l - u * LENGTH
+		top_pts.append(Vector2(half_h - top_row / float(img_h - 1) * HEIGHT, z))
+		bottom_pts.append(Vector2(half_h - bottom_row / float(img_h - 1) * HEIGHT, z))
+	if top_pts.size() < 2:
+		return
+
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = Color(0.3, 0.32, 0.34)
+	mat.roughness = 0.8
+	# Thin and only ever seen near edge-on -- same double-sided reasoning
+	# as the Core, not the flank sheets' winding-order approach.
+	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	_add_rim_strip(st, top_pts)
+	_add_rim_strip(st, bottom_pts)
+	# Nose and tail: a single-segment "strip" connecting the dorsal point
+	# to the ventral point at that end closes the last open gap.
+	_add_rim_strip(st, [top_pts[0], bottom_pts[0]])
+	_add_rim_strip(st, [top_pts[top_pts.size() - 1], bottom_pts[bottom_pts.size() - 1]])
+	st.generate_normals()
+
+	var mesh_instance := MeshInstance3D.new()
+	mesh_instance.name = "Rim"
+	mesh_instance.mesh = st.commit()
+	mesh_instance.material_override = mat
+	root.add_child(mesh_instance)
+
+## side=+1 is the right flank's edge vertex at this boundary point,
+## side=-1 the left flank's -- the identical inflation formula the flank
+## sheets themselves use, so the rim meets them with no step.
+func _rim_vertex(side: float, yz: Vector2) -> Vector3:
+	var y := yz.x
+	var z := yz.y
+	return Vector3(side * (SIDE_GAP + _half_thickness(y, z)), y, z)
+
+func _add_rim_strip(st: SurfaceTool, points: Array) -> void:
+	for i in range(points.size() - 1):
+		var r0 := _rim_vertex(1.0, points[i])
+		var l0 := _rim_vertex(-1.0, points[i])
+		var r1 := _rim_vertex(1.0, points[i + 1])
+		var l1 := _rim_vertex(-1.0, points[i + 1])
+		st.add_vertex(r0)
+		st.add_vertex(l0)
+		st.add_vertex(r1)
+		st.add_vertex(r1)
+		st.add_vertex(l0)
+		st.add_vertex(l1)
+
 func _build_animations(root: Node3D) -> void:
 	anim_player = AnimationPlayer.new()
 	anim_player.name = "AnimationPlayer"
 	root.add_child(anim_player)
 	var library := AnimationLibrary.new()
 	library.add_animation("Swim_Idle", _make_swim_animation(1.5, 7.0))
-	library.add_animation("Chase", _make_swim_animation(0.6, 14.0))
+	library.add_animation("Fast_Swim", _make_swim_animation(0.6, 14.0))
 	library.add_animation("Bite", _make_bite_animation())
 	library.add_animation("Death", _make_death_animation())
 	library.add_animation("HitReact", _make_hit_react_animation())

@@ -83,6 +83,7 @@ func _build_body(root: Node3D) -> void:
 	_make_side_sheet(root, 1.0, mat)
 	_make_side_sheet(root, -1.0, mat)
 	_build_core(root, texture)
+	_build_rim(root, texture)
 
 ## The two sheets never close across the centerline, so from dead ahead or
 ## dead astern (the chase camera's angle) the fish read as a hollow lens
@@ -193,6 +194,85 @@ func _build_core(root: Node3D, texture: Texture2D) -> void:
 	mesh_instance.mesh = st.commit()
 	mesh_instance.material_override = mat
 	root.add_child(mesh_instance)
+
+## The two flank sheets are textured rectangles clipped by alpha-scissor in
+## the shader, not by real mesh edges -- so wherever the opaque silhouette
+## (fin tips, snout, tail) runs close to the sheet's dorsal/ventral border,
+## there's nothing but open air between the two flanks there, and a
+## shallow enough viewing angle looks straight through the model at that
+## edge. The Core fills the fat midsection but deliberately stays narrower
+## than the silhouette (CORE_HEIGHT_SHRINK) and stops short of the tail
+## fork (CORE_MAX_U), so it doesn't reach any of those edges either. This
+## traces the silhouette's actual top and bottom boundary (same alpha scan
+## _build_core uses, but the true extremes, not a shrunken approximation)
+## and stitches a thin strip connecting the two flanks exactly along it --
+## plus a closing quad at the nose and tail tip -- sealing the perimeter
+## the Core was never meant to reach.
+func _build_rim(root: Node3D, texture: Texture2D) -> void:
+	var img := texture.get_image()
+	if img.is_compressed():
+		img.decompress()
+	var img_w := img.get_width()
+	var img_h := img.get_height()
+	var half_l := LENGTH / 2.0
+	var half_h := HEIGHT / 2.0
+
+	var top_pts: Array[Vector2] = [] # (y, z) pairs along the dorsal boundary
+	var bottom_pts: Array[Vector2] = [] # along the ventral boundary
+	for c in range(LENGTH_SEGMENTS + 1):
+		var u := c / float(LENGTH_SEGMENTS)
+		var col := int(round(u * (img_w - 1)))
+		var top_row := -1
+		var bottom_row := -1
+		for row in range(img_h):
+			if img.get_pixel(col, row).a > 0.5:
+				if top_row < 0:
+					top_row = row
+				bottom_row = row
+		if top_row < 0:
+			continue
+		var z := half_l - u * LENGTH
+		top_pts.append(Vector2(half_h - top_row / float(img_h - 1) * HEIGHT, z))
+		bottom_pts.append(Vector2(half_h - bottom_row / float(img_h - 1) * HEIGHT, z))
+	if top_pts.size() < 2:
+		return
+
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = Color(0.22, 0.24, 0.27)
+	mat.roughness = 0.8
+	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	_add_rim_strip(st, top_pts)
+	_add_rim_strip(st, bottom_pts)
+	_add_rim_strip(st, [top_pts[0], bottom_pts[0]])
+	_add_rim_strip(st, [top_pts[top_pts.size() - 1], bottom_pts[bottom_pts.size() - 1]])
+	st.generate_normals()
+
+	var mesh_instance := MeshInstance3D.new()
+	mesh_instance.name = "Rim"
+	mesh_instance.mesh = st.commit()
+	mesh_instance.material_override = mat
+	root.add_child(mesh_instance)
+
+func _rim_vertex(side: float, yz: Vector2) -> Vector3:
+	var y := yz.x
+	var z := yz.y
+	return Vector3(side * (SIDE_GAP + _half_thickness(y, z)), y, z)
+
+func _add_rim_strip(st: SurfaceTool, points: Array) -> void:
+	for i in range(points.size() - 1):
+		var r0 := _rim_vertex(1.0, points[i])
+		var l0 := _rim_vertex(-1.0, points[i])
+		var r1 := _rim_vertex(1.0, points[i + 1])
+		var l1 := _rim_vertex(-1.0, points[i + 1])
+		st.add_vertex(r0)
+		st.add_vertex(l0)
+		st.add_vertex(r1)
+		st.add_vertex(r1)
+		st.add_vertex(l0)
+		st.add_vertex(l1)
 
 ## Outward bulge at a given point on the flank. An ellipse cross-section
 ## vertically (rounded back-to-belly) crossed with a blunt superellipse

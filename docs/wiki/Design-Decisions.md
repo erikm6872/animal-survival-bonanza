@@ -255,20 +255,19 @@ rather than editing history.
   whether the state machine reached the ATTACK state — a reminder that
   "the state machine did the right thing" and "the mechanic actually
   works" are different claims, and worth verifying separately.
-- **The ocean's hostile wildlife (Tiger Shark) gets its own
-  `ocean_enemy_controller.gd`, not a reuse of `enemy_controller.gd`.**
-  Same shape as the land/flight movement-controller split: a shark chases
-  in full 3D (closing distance on all three axes, clamped between the
-  seafloor and the surface via `OceanHeight`, like the Tuna's own
-  `swim_controller.gd`) rather than flattening to the XZ plane and relying
-  on gravity/floor collision the way every land enemy does. The
-  idle/chase/attack/dead state machine, `EnemySpecies` schema, and
-  `Damageable`/`Hitbox`/`HealthBar3D` wiring are otherwise identical and
-  deliberately kept that way — only the movement model differs.
+- **The Tiger Shark is a playable species, not hostile wildlife.** It
+  shipped once as an ocean enemy (its own `ocean_enemy_controller.gd`, a
+  3D swim-chase AI state machine) before a correction: it was meant to
+  join the Tuna as a second playable ocean animal all along. The enemy
+  controller, its `EnemySpecies` resource, and the ocean enemy spawner
+  were deleted outright rather than kept as unused infrastructure — see
+  `resources/species/tiger_shark_species.tres` (an `AnimalSpecies`, not
+  an `EnemySpecies`) and `scripts/player/tiger_shark_model.gd`, which
+  reuses `swim_controller.gd` exactly like the Tuna.
 - **The Tiger Shark is photo-textured with the exact same inflated-sheet
   + alpha-derived-core technique as the playable Tuna** (requested
   explicitly, rather than left as a judgment call) — see
-  `scripts/enemies/tiger_shark_model.gd`, which differs from
+  `scripts/player/tiger_shark_model.gd`, which differs from
   `tuna_model.gd` only in its proportions and source photo, not its
   approach.
 - **The shark's source photo needed a hand-traced cutout, not an
@@ -287,6 +286,26 @@ rather than editing history.
   specific regions against raw pixel brightness samples rather than eyeballing
   alone — then supersampled 2x before downscaling, for anti-aliased edges
   without needing a smarter segmentation algorithm.
+- **Both fish models (Tuna and Tiger Shark) needed a third mesh piece --
+  a "Rim" -- beyond the flank sheets and the interior Core.** The flank
+  sheets are full rectangles clipped to the photo's silhouette by
+  alpha-scissor in the shader, not by real mesh edges, so wherever the
+  opaque silhouette (fin tips, snout, tail) runs close to the sheet's
+  own dorsal/ventral border, there's nothing but open air between the
+  two flanks there. The Core (added earlier to fix the hollow-lens look
+  from dead ahead/astern) doesn't reach those spots either -- it
+  deliberately stays narrower than the silhouette and stops short of the
+  tail fork. Reported as "the texture doesn't connect on the edges, so
+  from certain angles the inside is visible," which is exactly that gap
+  seen nearly edge-on along the back, belly, or a fin. Fixed by tracing
+  the silhouette's true top and bottom boundary from the same per-column
+  alpha scan the Core uses (the real extremes this time, not a shrunken
+  approximation) and stitching a thin strip connecting the two flanks
+  along it, closed off at the nose and tail tip -- sealing the entire
+  perimeter the Core was never meant to reach. Verified with rendered
+  screenshots from the angles that actually exposed the bug (top-down,
+  bottom-up, shallow grazing angles along the fin edges), not just the
+  square-on angles used to verify the Core.
 
 ## Quality of life
 
