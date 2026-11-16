@@ -219,9 +219,13 @@ func _build_rim(root: Node3D, texture: Texture2D) -> void:
 
 	var top_pts: Array[Vector2] = [] # (y, z) pairs along the dorsal boundary
 	var bottom_pts: Array[Vector2] = [] # along the ventral boundary
-	for c in range(LENGTH_SEGMENTS + 1):
-		var u := c / float(LENGTH_SEGMENTS)
-		var col := int(round(u * (img_w - 1)))
+	# Sampled once per image column (not LENGTH_SEGMENTS) -- the body mesh's
+	# low-poly grid is coarse enough that a silhouette feature narrower than
+	# one grid cell (a fin's leading/trailing edge rising steeply) can sit
+	# entirely between two samples, letting the actual alpha-scissored edge
+	# bulge past a Rim traced at that resolution and reopen the gap.
+	for col in range(img_w):
+		var u := col / float(img_w - 1)
 		var top_row := -1
 		var bottom_row := -1
 		for row in range(img_h):

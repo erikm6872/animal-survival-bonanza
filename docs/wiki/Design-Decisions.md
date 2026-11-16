@@ -306,6 +306,25 @@ rather than editing history.
   screenshots from the angles that actually exposed the bug (top-down,
   bottom-up, shallow grazing angles along the fin edges), not just the
   square-on angles used to verify the Core.
+- **The first Rim fix (above) still left a gap, reported again against
+  the shark.** Root cause: the Rim's top/bottom boundary was sampled at
+  only `LENGTH_SEGMENTS + 1` (33) points along the body, reusing the same
+  coarse spacing as the body mesh's own low-poly grid. The flank sheets'
+  silhouette is alpha-scissored per-pixel at full texture resolution, so
+  a feature narrower than one grid cell -- a fin's leading or trailing
+  edge rising steeply -- could sit entirely between two Rim samples; the
+  straight line connecting those samples cut inside the real silhouette
+  there, and the actual edge poked out past it, reopening the gap. Fixed
+  by sampling the Rim once per image column (1200 points for the shark)
+  instead of once per body segment -- decoupling the Rim's resolution
+  from the body mesh's polygon budget, since it's a thin strip and cheap
+  to build at that density regardless of how coarse the body grid is.
+  Confirmed by re-rendering the same grazing angles with the Rim colored
+  solid magenta to make any remaining seam unmistakable, plus an ambient
+  fill light added to the debug rig after an apparent gap turned out to
+  be unlit backface shading from a single hard directional light, not a
+  real hole -- a reminder to check pixel color (black vs. the actual
+  background color) before concluding a dark patch is missing geometry.
 
 ## Quality of life
 
