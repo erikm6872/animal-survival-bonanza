@@ -174,6 +174,51 @@ rather than editing history.
   material must keep default backface culling, since double-siding
   near-coincident sheets makes the far one bleed through the near one.
 
+- **Character select got a `category` field and filter tabs, split along
+  five groups rather than the three originally named (land mammals /
+  undersea / dinosaurs).** Sorting the existing roster into exactly those
+  three left Chameleon, Komodo Dragon (reptiles) and Sparrow, Bald Eagle,
+  Pelican (birds) with no honest home — folding them into "Land Mammals"
+  would make that label inaccurate for 5 of the game's then-9 species.
+  Decision: keep all three requested groups and add Birds/Reptiles rather
+  than mislabel. `category` (`AnimalSpecies.Category` enum) is deliberately
+  a separate axis from `player_scene`/`start_scene` — it only drives which
+  character-select tab a species appears under, nothing mechanical — see
+  [Species System](Species-System.md#categories-vs-controllers-maps-two-independent-axes).
+- **Velociraptor: the photo-cutout technique, extended to a two-legged
+  pose.** The Tuna/Tiger Shark technique (inflated flank sheets + an
+  alpha-derived interior core/rim) assumes a torpedo-shaped body with a
+  single thickness profile centered on the image's vertical middle — true
+  for a fish, not for a biped where the same photo column holds two
+  unrelated masses (torso above, legs below) stacked in one contiguous
+  alpha run. Applying the fish's single-profile formula as-is would
+  inflate a leg's full hip-to-foot run into a torso-sized sausage.
+  Decision: split every alpha scan into two independently-profiled bands
+  by a fixed row cutoff (torso/neck/head/tail above it, legs below),
+  each with its own measured center and depth per length-slice, combined
+  via `max()` in the flank's thickness function — see
+  `scripts/player/velociraptor_model.gd`. Accepted trade-off: both bands
+  taper toward zero approaching their shared boundary, leaving a soft
+  under-inflated "waist" right at hip height rather than a perfectly
+  continuous body — a minor, visible-but-not-chased seam, in the same
+  spirit as the fish scripts' own documented small gaps.
+- **Velociraptor's source image was chosen for pose, not just license.**
+  Several CC-licensed restorations were candidates; a dynamic
+  mid-stride pose (Fred Wierum's, CC BY-SA 4.0) was passed over because
+  its raised foot has a true background gap between the leg and the body
+  in several image columns — the band-splitting technique above still
+  depends on each column being one contiguous opaque run within its band.
+  TotalDino's standing restoration (CC BY 4.0, `Velociraptor_TD.png`) was
+  used instead specifically because both feet plant directly under the
+  body with no gap, and it already shipped with a clean alpha channel
+  (no hand-tracing needed, unlike the Tiger Shark's photo).
+- **No existing dinosaur model, real or CC0, was found** (Sketchfab/
+  poly.pizza/OpenGameArt/Quaternius all searched) — same situation as the
+  Sparrow's missing bird model and the Tuna/shark's missing fish models,
+  resolved the same way: build it from what the project already knows how
+  to build (procedural photo cutout) rather than compromise on a
+  wrong-looking or license-incompatible asset.
+
 ## World generation
 
 - **Everything procedural, nothing hand-authored.** Terrain, mountains,

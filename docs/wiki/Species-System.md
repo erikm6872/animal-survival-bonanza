@@ -11,6 +11,7 @@ movement controller is a new `.tres` file, not a code change.
 
 ```gdscript
 @export var display_name: String
+@export var category: Category             # which character-select tab this falls under
 @export var model_scene: PackedScene       # instanced under $Model at spawn
 @export var model_scale: float
 @export var player_scene: PackedScene      # which controller scene plays this species
@@ -111,11 +112,28 @@ reopen the same cycle risk from the resource side.
 4. Tune `hitbox_offset` and the `attack_hit_*_fraction` pair by eye against
    the model's actual attack animation — these aren't derived from
    anything, they're just where the bite/lunge lands in that specific clip.
-5. Add the new `.tres` path to `SPECIES_PATHS` in
+5. Set `category` to whichever `AnimalSpecies.Category` enum value fits —
+   this is what drives the filter tabs in character select, not the species'
+   `start_scene`/`player_scene`, so a land-based reptile and a land-based
+   mammal can sort into different tabs despite sharing the exact same
+   controller and map.
+6. Add the new `.tres` path to `SPECIES_PATHS` in
    `scripts/ui/character_select.gd`.
 
 No controller script changes needed, as long as the model's animation set
 covers the fields the chosen controller reads.
+
+## Categories vs. controllers/maps: two independent axes
+
+`category` (Land Mammal / Bird / Reptile / Undersea / Dinosaur) only
+affects which character-select tab a species appears under — it's read
+nowhere else. It's deliberately independent of `player_scene` (which
+controller moves it) and `start_scene` (which map it spawns into): the
+Komodo Dragon and Chameleon are both ground-controlled, land-mapped
+reptiles sharing every mechanical trait with Wolf/Stag, but sort into
+"Reptiles" rather than "Land Mammals" purely because they aren't mammals.
+Don't infer one from the other when adding a species — set both
+deliberately.
 
 ## When the model's animation set is incomplete: the Bald Eagle's hybrid approach
 

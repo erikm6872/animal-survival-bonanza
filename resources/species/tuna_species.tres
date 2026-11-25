@@ -7,6 +7,7 @@
 [resource]
 script = ExtResource("1_script")
 display_name = "Tuna"
+category = 3
 model_scene = ExtResource("2_model")
 player_scene = ExtResource("3_player_scene")
 start_scene = "res://scenes/world/ocean_world.tscn"

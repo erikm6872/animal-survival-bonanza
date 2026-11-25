@@ -7,6 +7,7 @@
 [resource]
 script = ExtResource("1_script")
 display_name = "Pelican"
+category = 1
 model_scene = ExtResource("2_model")
 player_scene = ExtResource("3_player_scene")
 model_scale = 1.0

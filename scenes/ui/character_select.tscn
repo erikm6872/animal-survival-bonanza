@@ -42,6 +42,11 @@ theme_override_font_sizes/font_size = 26
 horizontal_alignment = 1
 text = "Choose Your Animal"
 
+[node name="CategoryTabs" type="HBoxContainer" parent="PanelContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 4
+
 [node name="CardScroll" type="ScrollContainer" parent="PanelContainer/MarginContainer/VBoxContainer"]
 layout_mode = 2
 size_flags_vertical = 3

@@ -6,7 +6,15 @@ class_name AnimalSpecies
 ## at runtime and reads everything else from here, so adding a new species
 ## is just a new resource file, not a code change.
 
+## Which group character select sorts this species into. Not a strict
+## biological taxonomy -- Chameleon and Komodo Dragon are reptiles and
+## Sparrow/Eagle/Pelican are birds, but all five are grouped separately from
+## LAND_MAMMAL (Wolf, Stag) since "land mammal" loosely covers only the
+## actual mammals.
+enum Category { LAND_MAMMAL, BIRD, REPTILE, UNDERSEA, DINOSAUR }
+
 @export var display_name: String = ""
+@export var category: Category = Category.LAND_MAMMAL
 @export var model_scene: PackedScene
 @export var model_scale: float = 0.3
 ## Which scene/controller spawns this species — most species share the
