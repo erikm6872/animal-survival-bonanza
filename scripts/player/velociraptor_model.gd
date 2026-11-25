@@ -128,6 +128,7 @@ func _build_body(root: Node3D) -> void:
 	_make_side_sheet(root, -1.0, mat)
 	_build_core(root)
 	_build_rim(root, img)
+	_build_mouth_seal(root, img)
 
 ## For each length-segment slice, finds the longest contiguous opaque run
 ## within a row sub-range (same technique tuna_model.gd's _build_core uses
@@ -397,6 +398,78 @@ func _build_rim(root: Node3D, img: Image) -> void:
 	mesh_instance.material_override = mat
 	root.add_child(mesh_instance)
 
+## The mouth is drawn open: within a narrow band near the snout (image
+## columns ~16-88 of 1200, empirically -- roughly the first 7% of the
+## image), each column's opaque pixels split into two separate runs (the
+## upper jaw/skull above, the lower jaw below) with a real transparent gap
+## between them, unlike every other column which has one contiguous run.
+## _build_rim's top/bottom traces only follow the OUTERMOST edge per
+## column, so they correctly never cross this gap -- but nothing seals the
+## gap's own INNER boundary (the underside of the upper jaw, the top of the
+## lower jaw), the same "hollow lens" problem _build_rim exists to fix for
+## the body's outer silhouette, just turned up at the mouth cavity instead.
+## Left alone, that read as a visible line/gap cutting between the jaws
+## from the wrong angle. This traces and seals that inner boundary the same
+## way, restricted to just this column range so it doesn't touch the many
+## much-smaller multi-run columns elsewhere (between toes, around tooth
+## serrations further back) -- sealing those would look like webbing that
+## doesn't belong there.
+const MOUTH_GAP_MAX_U := 0.1
+const MOUTH_SEAL_MIN_RUN_PX := 3 ## ignores single-pixel antialiasing/tooth-serration noise
+
+func _build_mouth_seal(root: Node3D, img: Image) -> void:
+	var img_w := img.get_width()
+	var img_h := img.get_height()
+	var max_col := int(MOUTH_GAP_MAX_U * (img_w - 1))
+
+	var inner_top_pts: Array[Vector2] = []
+	var inner_bottom_pts: Array[Vector2] = []
+	for col in range(max_col + 1):
+		var first_start := -1
+		var first_end := -1
+		var last_start := -1
+		var in_run := false
+		var run_start := 0
+		for row in range(img_h + 1):
+			var opaque := row < img_h and img.get_pixel(col, row).a > 0.5
+			if opaque and not in_run:
+				run_start = row
+				in_run = true
+			elif not opaque and in_run:
+				if row - run_start >= MOUTH_SEAL_MIN_RUN_PX:
+					if first_start < 0:
+						first_start = run_start
+						first_end = row
+					last_start = run_start
+				in_run = false
+		if first_start < 0 or last_start <= first_end:
+			continue # one run (or none) here -- mouth is closed at this column
+		var u := col / float(img_w - 1)
+		var z := LENGTH / 2.0 - u * LENGTH
+		inner_top_pts.append(Vector2(HEIGHT - first_end / float(img_h - 1) * HEIGHT, z))
+		inner_bottom_pts.append(Vector2(HEIGHT - last_start / float(img_h - 1) * HEIGHT, z))
+	if inner_top_pts.size() < 2:
+		return
+
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = Color(0.3, 0.27, 0.2)
+	mat.roughness = 0.8
+	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	_add_rim_strip(st, inner_top_pts)
+	_add_rim_strip(st, inner_bottom_pts)
+	_add_rim_strip(st, [inner_top_pts[0], inner_bottom_pts[0]])
+	_add_rim_strip(st, [inner_top_pts[inner_top_pts.size() - 1], inner_bottom_pts[inner_bottom_pts.size() - 1]])
+	st.generate_normals()
+
+	var mesh_instance := MeshInstance3D.new()
+	mesh_instance.name = "MouthSeal"
+	mesh_instance.mesh = st.commit()
+	mesh_instance.material_override = mat
+	root.add_child(mesh_instance)
+
 func _rim_vertex(side: float, yz: Vector2) -> Vector3:
 	var y := yz.x
 	var z := yz.y
@@ -429,6 +502,7 @@ func _build_animations(root: Node3D) -> void:
 	library.add_animation("Walk", _make_run_animation(0.55, 4.0, 0.015))
 	library.add_animation("Gallop", _make_run_animation(0.32, 7.0, 0.03))
 	library.add_animation("BiteAttack", _make_bite_animation())
+	library.add_animation("Pounce", _make_pounce_animation())
 	library.add_animation("Death", _make_death_animation())
 	library.add_animation("HitReact", _make_hit_react_animation())
 	anim_player.add_animation_library("", library)
@@ -466,30 +540,32 @@ func _make_run_animation(cycle_length: float, pitch_deg: float, bob_height: floa
 
 	return anim
 
-## Stakeholder-specified attack, four phases in whole-body position/rotation
-## tracks (no jaw bone to animate independently -- same constraint as every
-## other whole-body-rotation clip here): a crouched windup, a forward-and-
-## down tackle that drives the body low as if pinning prey to the ground, a
-## clamping hold, and a sideways wrench ("rip") before recovering back to
-## idle. attack_hit_start/end_fraction in velociraptor_species.tres are
-## timed to the clamp+rip span (not the windup/tackle travel or the
-## recovery), since that's the part that's actually supposed to connect.
-const BITE_LENGTH := 0.8
+## Stakeholder-specified special move (unlockable, see
+## player_controller.gd's KILLS_NEEDED_TO_POUNCE/can_pounce): four phases in
+## whole-body position/rotation tracks (no jaw bone to animate independently
+## -- same constraint as every other whole-body-rotation clip here): a
+## crouched windup, a forward-and-down tackle that drives the body low as if
+## pinning prey to the ground, a clamping hold, and a sideways wrench
+## ("rip") before recovering back to idle. pounce_hit_start/end_fraction in
+## velociraptor_species.tres are timed to the clamp+rip span (not the
+## windup/tackle travel or the recovery), since that's the part that's
+## actually supposed to connect.
+const POUNCE_LENGTH := 0.8
 
-func _make_bite_animation() -> Animation:
+func _make_pounce_animation() -> Animation:
 	var anim := Animation.new()
-	anim.length = BITE_LENGTH
+	anim.length = POUNCE_LENGTH
 	anim.loop_mode = Animation.LOOP_NONE
 
-	# Phase timings, as fractions of BITE_LENGTH -- kept named rather than
-	# inlined so the four phases below (and attack_hit_*_fraction in the
+	# Phase timings, as fractions of POUNCE_LENGTH -- kept named rather than
+	# inlined so the four phases below (and pounce_hit_*_fraction in the
 	# species resource, which must line up with t_clamp/t_rip_end) stay
 	# readable as the same handful of beats the stakeholder described.
-	var t_crouch := BITE_LENGTH * 0.12
-	var t_impact := BITE_LENGTH * 0.30 ## tackle lands -- prey hits the ground
-	var t_clamp := BITE_LENGTH * 0.40 ## jaws have closed, hold begins
-	var t_rip_end := BITE_LENGTH * 0.68 ## wrench to the side finishes
-	var t_end := BITE_LENGTH
+	var t_crouch := POUNCE_LENGTH * 0.12
+	var t_impact := POUNCE_LENGTH * 0.30 ## tackle lands -- prey hits the ground
+	var t_clamp := POUNCE_LENGTH * 0.40 ## jaws have closed, hold begins
+	var t_rip_end := POUNCE_LENGTH * 0.68 ## wrench to the side finishes
+	var t_end := POUNCE_LENGTH
 
 	# Forward lunge: a brief pull-back (anticipation) then the tackle drives
 	# the body forward, holds through the clamp+rip, then releases back.
@@ -542,6 +618,65 @@ func _make_bite_animation() -> Animation:
 	anim.track_insert_key(rz, 0.0, 0.0)
 	anim.track_insert_key(rz, t_clamp, 0.0)
 	anim.track_insert_key(rz, t_rip_end, deg_to_rad(11.0))
+	anim.track_insert_key(rz, t_end, 0.0)
+
+	return anim
+
+## The everyday attack (anim_attack, every attack-stamina-cost swing) --
+## deliberately much smaller than the Pounce above: a quick lunge forward,
+## then a snap back in as if closing in to grab and yank prey toward the
+## mouth, rather than the Pounce's full tackle-to-the-ground. There's no
+## separate arm/claw geometry on this model to actually close independently
+## (the source photo doesn't draw a visible foreleg at all, unlike some
+## restorations -- see assets/textures/ATTRIBUTION.md), so "arms closing to
+## grab" reads through the same whole-body language as the rest of this
+## script's clips: the forward reach is the "reaching," the quick pull-back-
+## in right after is the "closing/grab," sold with a touch of roll so it
+## doesn't read as a pure straight-line lunge.
+const BITE_LENGTH := 0.4
+
+func _make_bite_animation() -> Animation:
+	var anim := Animation.new()
+	anim.length = BITE_LENGTH
+	anim.loop_mode = Animation.LOOP_NONE
+
+	var t_crouch := BITE_LENGTH * 0.2
+	var t_reach := BITE_LENGTH * 0.45 ## arms/mouth extend out toward prey
+	var t_grab := BITE_LENGTH * 0.65 ## snaps back in as if yanking prey close
+	var t_end := BITE_LENGTH
+
+	var z := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(z, NodePath(".:position:z"))
+	anim.track_insert_key(z, 0.0, 0.0)
+	anim.track_insert_key(z, t_crouch, -0.03)
+	anim.track_insert_key(z, t_reach, 0.35)
+	anim.track_insert_key(z, t_grab, 0.22)
+	anim.track_insert_key(z, t_end, 0.0)
+
+	var y := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(y, NodePath(".:position:y"))
+	anim.track_insert_key(y, 0.0, 0.0)
+	anim.track_insert_key(y, t_crouch, -0.015)
+	anim.track_insert_key(y, t_reach, -0.05)
+	anim.track_insert_key(y, t_grab, -0.03)
+	anim.track_insert_key(y, t_end, 0.0)
+
+	var rx := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(rx, NodePath(".:rotation:x"))
+	anim.track_insert_key(rx, 0.0, 0.0)
+	anim.track_insert_key(rx, t_crouch, deg_to_rad(-5.0))
+	anim.track_insert_key(rx, t_reach, deg_to_rad(18.0))
+	anim.track_insert_key(rx, t_grab, deg_to_rad(10.0))
+	anim.track_insert_key(rx, t_end, 0.0)
+
+	# A small roll riding along with the grab-snap -- a pure forward/back
+	# lunge alone reads as a bite, the added twist is what sells "closing
+	# in on" prey rather than just poking at it.
+	var rz := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(rz, NodePath(".:rotation:z"))
+	anim.track_insert_key(rz, 0.0, 0.0)
+	anim.track_insert_key(rz, t_reach, 0.0)
+	anim.track_insert_key(rz, t_grab, deg_to_rad(6.0))
 	anim.track_insert_key(rz, t_end, 0.0)
 
 	return anim

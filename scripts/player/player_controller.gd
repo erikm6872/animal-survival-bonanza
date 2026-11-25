@@ -43,9 +43,13 @@ var camera_distance_index: int = 0
 var attack_hit_start: float
 var attack_hit_end: float
 
+var pounce_hit_start: float
+var pounce_hit_end: float
+
 const DEATH_RESPAWN_DELAY: float = 3.0
 
 const ATTACK_STAMINA_COST: float = 15.0
+const POUNCE_STAMINA_COST: float = 35.0
 const SPRINT_STAMINA_DRAIN_RATE: float = 25.0 ## per second, while actively sprinting
 
 const DODGE_STAMINA_COST: float = 25.0
@@ -61,6 +65,9 @@ var is_attacking: bool = false
 var attack_time: float = 0.0
 var hitbox_open: bool = false
 
+var is_pouncing: bool = false
+var pounce_time: float = 0.0
+
 var is_hit_reacting: bool = false
 var is_dead: bool = false
 
@@ -75,6 +82,16 @@ var dodge_direction: Vector3 = Vector3.ZERO
 ## encounter flies in practice.
 const FLIES_NEEDED_TO_DEVOUR: int = 5
 var flies_eaten: int = 0
+
+## Secret mechanic, same shape as the Chameleon's fly count above: every
+## landed normal-attack KILL (not just a hit) charges this up; once it
+## reaches KILLS_NEEDED_TO_POUNCE, the next pounce is guaranteed lethal on
+## whatever it connects with and the charge is spent. A pounce that misses
+## leaves the charge banked. See AnimalSpecies.can_pounce. Only the
+## Velociraptor opts in so far, but kills_since_pounce still increments
+## harmlessly for every species, same as flies_eaten does.
+const KILLS_NEEDED_TO_POUNCE: int = 3
+var kills_since_pounce: int = 0
 
 func _ready() -> void:
 	if GameState.selected_species:
@@ -111,6 +128,11 @@ func _ready() -> void:
 	attack_hit_start = attack_length * species.attack_hit_start_fraction
 	attack_hit_end = attack_length * species.attack_hit_end_fraction
 
+	if species.can_pounce and species.anim_pounce != "":
+		var pounce_length := anim_player.get_animation(species.anim_pounce).length
+		pounce_hit_start = pounce_length * species.pounce_hit_start_fraction
+		pounce_hit_end = pounce_length * species.pounce_hit_end_fraction
+
 	damageable.damaged.connect(_on_damaged)
 	damageable.died.connect(_on_died)
 	hud.update_health(damageable.current_health, damageable.max_health)
@@ -132,10 +154,7 @@ func _spawn_model() -> void:
 	if species.fur_mesh_path != NodePath(""):
 		fur_mesh = instance.get_node(species.fur_mesh_path)
 
-	hitbox.transform = Transform3D(Basis.IDENTITY, species.hitbox_offset)
-	var sphere := SphereShape3D.new()
-	sphere.radius = species.hitbox_radius
-	hitbox_shape.shape = sphere
+	_use_normal_hitbox()
 
 func _find_animation_player(node: Node) -> AnimationPlayer:
 	for child in node.get_children():
@@ -146,11 +165,42 @@ func _find_animation_player(node: Node) -> AnimationPlayer:
 			return found
 	return null
 
+## The regular attack's hitbox placement/size/damage, read from the species
+## resource. Also the resting state outside of a pounce — see
+## _use_pounce_hitbox().
+func _use_normal_hitbox() -> void:
+	hitbox.transform = Transform3D(Basis.IDENTITY, species.hitbox_offset)
+	var sphere := SphereShape3D.new()
+	sphere.radius = species.hitbox_radius
+	hitbox_shape.shape = sphere
+	hitbox.damage = species.attack_damage
+
+## Swapped in for the duration of a pounce: a different reach/size (the
+## tackle drives prey to the ground before the bite lands, a different
+## placement than the regular attack's quick lunge) and effectively
+## unlimited damage, since a pounce is meant to be an outright kill rather
+## than scaled by attack_damage. _use_normal_hitbox() restores the regular
+## values once the pounce ends (animation finishes) or is interrupted
+## (damaged/died).
+const POUNCE_LETHAL_DAMAGE: float = 99999.0
+
+func _use_pounce_hitbox() -> void:
+	hitbox.transform = Transform3D(Basis.IDENTITY, species.pounce_hitbox_offset)
+	var sphere := SphereShape3D.new()
+	sphere.radius = species.pounce_hitbox_radius
+	hitbox_shape.shape = sphere
+	hitbox.damage = POUNCE_LETHAL_DAMAGE
+
 func _on_animation_finished(anim_name: StringName) -> void:
 	if anim_name == species.anim_attack:
 		is_attacking = false
 		hitbox_open = false
 		hitbox.deactivate()
+	elif anim_name == species.anim_pounce:
+		is_pouncing = false
+		hitbox_open = false
+		hitbox.deactivate()
+		_use_normal_hitbox()
 	elif anim_name in species.anim_hit_react:
 		is_hit_reacting = false
 
@@ -160,6 +210,9 @@ func _on_damaged(_amount: float, _source: Node) -> void:
 		return
 	is_hit_reacting = true
 	is_attacking = false
+	if is_pouncing:
+		is_pouncing = false
+		_use_normal_hitbox()
 	hitbox_open = false
 	hitbox.deactivate()
 	anim_player.play(species.anim_hit_react.pick_random())
@@ -167,11 +220,13 @@ func _on_damaged(_amount: float, _source: Node) -> void:
 func _on_died(_source: Node) -> void:
 	is_dead = true
 	is_attacking = false
+	is_pouncing = false
 	is_hit_reacting = false
 	is_dodging = false
 	damageable.is_invulnerable = false
 	hitbox_open = false
 	hitbox.deactivate()
+	_use_normal_hitbox()
 	anim_player.play(species.anim_death)
 	await get_tree().create_timer(DEATH_RESPAWN_DELAY).timeout
 	_respawn()
@@ -186,6 +241,8 @@ func _on_fly_eaten() -> void:
 ## devour (not every tongue hit lands on an enemy, and not every species can
 ## devour at all) before consuming the fly count and triggering the visual.
 func _on_hitbox_landed_hit(target: Node) -> void:
+	_track_pounce_kill(target)
+
 	if not species.can_devour_enemies or flies_eaten < FLIES_NEEDED_TO_DEVOUR:
 		return
 	if not target.has_method("begin_devoured"):
@@ -196,6 +253,20 @@ func _on_hitbox_landed_hit(target: Node) -> void:
 	# its 0.5s clip, see chameleon_model.gd) so the prey visually arrives at
 	# the mouth right as the tongue finishes retracting.
 	target.begin_devoured(mouth_position, 0.2)
+
+## kills_since_pounce increments unconditionally (harmless/unused for
+## species that don't opt into can_pounce), same as flies_eaten does for
+## can_devour_enemies above. Only counts an actual KILL, not just a landed
+## hit -- Hitbox.take_damage() already ran by the time landed_hit fires, so
+## target's Damageable.is_dead is already up to date here.
+func _track_pounce_kill(target: Node) -> void:
+	var target_damageable: Damageable = target.get_node_or_null("Damageable")
+	if not target_damageable or not target_damageable.is_dead:
+		return
+	if is_pouncing:
+		kills_since_pounce = 0 ## charge spent
+	else:
+		kills_since_pounce = mini(kills_since_pounce + 1, KILLS_NEEDED_TO_POUNCE)
 
 ## Plain-color tint for now; a real fur texture can replace this later without
 ## changing the caller (pause menu) — it only knows about get/set color.
@@ -268,7 +339,7 @@ func _physics_process(delta: float) -> void:
 	right = right.normalized()
 	var move_dir := (forward * -input_dir.y + right * input_dir.x)
 
-	if Input.is_action_just_pressed("dodge") and not is_dodging and not is_attacking and not is_hit_reacting \
+	if Input.is_action_just_pressed("dodge") and not is_dodging and not is_attacking and not is_pouncing and not is_hit_reacting \
 			and stamina.try_spend(DODGE_STAMINA_COST):
 		is_dodging = true
 		dodge_time = 0.0
@@ -295,7 +366,7 @@ func _physics_process(delta: float) -> void:
 		move_and_slide()
 		return
 
-	if Input.is_action_just_pressed("attack") and not is_attacking and not is_hit_reacting \
+	if Input.is_action_just_pressed("attack") and not is_attacking and not is_pouncing and not is_hit_reacting \
 			and stamina.try_spend(ATTACK_STAMINA_COST):
 		is_attacking = true
 		attack_time = 0.0
@@ -307,6 +378,24 @@ func _physics_process(delta: float) -> void:
 			hitbox_open = true
 			hitbox.activate()
 		elif hitbox_open and attack_time >= attack_hit_end:
+			hitbox_open = false
+			hitbox.deactivate()
+
+	if Input.is_action_just_pressed("pounce") and species.can_pounce and species.anim_pounce != "" \
+			and kills_since_pounce >= KILLS_NEEDED_TO_POUNCE \
+			and not is_attacking and not is_pouncing and not is_hit_reacting \
+			and stamina.try_spend(POUNCE_STAMINA_COST):
+		is_pouncing = true
+		pounce_time = 0.0
+		anim_player.play(species.anim_pounce)
+		_use_pounce_hitbox()
+
+	if is_pouncing:
+		pounce_time += delta
+		if not hitbox_open and pounce_time >= pounce_hit_start and pounce_time < pounce_hit_end:
+			hitbox_open = true
+			hitbox.activate()
+		elif hitbox_open and pounce_time >= pounce_hit_end:
 			hitbox_open = false
 			hitbox.deactivate()
 
@@ -323,9 +412,9 @@ func _physics_process(delta: float) -> void:
 	if move_dir.length() > 0.1:
 		var target_angle := atan2(-move_dir.x, -move_dir.z)
 		model.rotation.y = lerp_angle(model.rotation.y, target_angle, rotation_speed * delta)
-		if not is_attacking and not is_hit_reacting:
+		if not is_attacking and not is_pouncing and not is_hit_reacting:
 			anim_player.play(species.anim_gallop if is_sprinting else species.anim_walk)
-	elif not is_attacking and not is_hit_reacting:
+	elif not is_attacking and not is_pouncing and not is_hit_reacting:
 		anim_player.play(species.anim_idle)
 
 	move_and_slide()

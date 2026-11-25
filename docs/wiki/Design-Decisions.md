@@ -212,23 +212,60 @@ rather than editing history.
   used instead specifically because both feet plant directly under the
   body with no gap, and it already shipped with a clean alpha channel
   (no hand-tracing needed, unlike the Tiger Shark's photo).
-- **The Velociraptor's attack is a stakeholder-specified four-beat move —
-  tackle to the ground, clamp, rip sideways — not a generic lunge-bite
-  copied from the other species.** `_make_bite_animation()` in
-  `velociraptor_model.gd` has five value tracks (position x/y, rotation
-  x/y/z) keyed through named phase markers (`t_crouch`, `t_impact`,
-  `t_clamp`, `t_rip_end`) rather than the two-or-three-key lunges the fish
-  and Komodo Dragon use, since "tackle down, then wrench the head sideways
-  while jaws are clamped" doesn't reduce to a single forward poke. The
-  wrench is a yaw (`rotation:y`) snap during the held-down clamp, not more
-  forward motion — that's the part actually meant to read as "rip," so it
-  gets the clip's fastest, largest motion. `attack_hit_start/end_fraction`
-  and `hitbox_offset` in `velociraptor_species.tres` were retimed/moved
-  to the clamp+rip span specifically (not the tackle travel or recovery),
+- **The Velociraptor's stakeholder-specified four-beat move — tackle to
+  the ground, clamp, rip sideways — turned out to be a special move, not
+  the everyday attack, once the regular attack was specified separately
+  (a quick lunge with a grab).** Originally built as `anim_attack` itself;
+  retargeted to a new `anim_pounce`/`_make_pounce_animation()` once the
+  distinction came in, with a new, much shorter `_make_bite_animation()`
+  taking over `anim_attack`. The elaborate version keeps its five value
+  tracks (position x/y, rotation x/y/z) keyed through named phase markers
+  (`t_crouch`, `t_impact`, `t_clamp`, `t_rip_end`) — "tackle down, then
+  wrench the head sideways while jaws are clamped" doesn't reduce to a
+  single forward poke the way the quick attack does. `pounce_hit_*_fraction`
+  and `pounce_hitbox_offset` in `velociraptor_species.tres` are timed to
+  the clamp+rip span specifically (not the tackle travel or recovery),
   since the hitbox is a static sphere relative to the character root (see
-  `player_controller.gd` — it doesn't track the animated model's position)
-  and needs to sit where the bite actually lands at the point damage is
-  meant to apply, not at the model's rest pose.
+  `player_controller.gd` — it doesn't track the animated model's position).
+- **The Pounce is a one-hit kill, gated behind 3 landed normal kills, built
+  as the same pattern as the Chameleon's secret fly-devour mechanic** (see
+  `can_devour_enemies`/`FLIES_NEEDED_TO_DEVOUR`) rather than a new bespoke
+  system: `player_controller.gd` tracks `kills_since_pounce` unconditionally
+  for every species (harmless/unused unless `can_pounce` is set, exactly
+  like `flies_eaten`), charges it on a landed hit that actually kills (not
+  just any hit), and only consumes the charge on an actual landed pounce —
+  a pounce that misses keeps the charge banked, same as a missed tongue
+  grab doesn't spend the Chameleon's fly count. "Guaranteed kill" is
+  implemented as a damage number, not a new kill API: the Hitbox's
+  `damage` and its transform/shape are swapped to pounce-specific values
+  (`_use_pounce_hitbox()`) for the pounce's hit window and restored
+  (`_use_normal_hitbox()`) when it ends or is interrupted, rather than
+  adding an explicit instakill path to `Hitbox`/`Damageable`.
+- **The regular attack reads as "reach out, then close in to grab" through
+  whole-body motion only — there's no separate arm to actually animate.**
+  The stakeholder asked for the arms to visibly close on the grab, but the
+  source illustration (`Velociraptor_TD.png`) doesn't draw a forelimb at
+  all (unlike some other candidate restorations considered for the model
+  itself), and the model has no separate mesh piece for one regardless —
+  same whole-body-rotation constraint as the running gait. The lunge-then-
+  snap-back-in motion (`_make_bite_animation()`) is meant to evoke a grab
+  through timing/body language rather than literal arm closure; adding a
+  real articulated arm would mean sourcing new arm geometry/texture, which
+  wasn't in scope for this pass.
+- **A visible line between the open jaws, fixed as its own small Rim-like
+  patch rather than a generalization of `_build_rim`.** The source photo's
+  open mouth means several columns near the snout have two separate opaque
+  runs (upper jaw, lower jaw) instead of one, which `_build_rim`'s
+  topmost/bottommost-per-column trace correctly never bridges — but
+  nothing sealed the gap's own *inner* boundary, the same hollow-lens
+  problem `_build_rim` exists to solve for the body's outer silhouette, just
+  recurring at the mouth cavity. Generalizing `_build_rim` to handle every
+  multi-run column everywhere was rejected: the legs/toes area has columns
+  with up to 6 runs (tooth-serration-style noise, individual toe/claw
+  gaps), and sealing those would look like webbing that doesn't belong
+  there. Instead, `_build_mouth_seal()` only scans a column range
+  empirically bounded to the snout (`MOUTH_GAP_MAX_U`), seals just that
+  gap's inner boundary, and leaves everything else untouched.
 - **No existing dinosaur model, real or CC0, was found** (Sketchfab/
   poly.pizza/OpenGameArt/Quaternius all searched) — same situation as the
   Sparrow's missing bird model and the Tuna/shark's missing fish models,

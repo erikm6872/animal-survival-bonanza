@@ -84,3 +84,24 @@ enum Category { LAND_MAMMAL, BIRD, REPTILE, UNDERSEA, DINOSAUR }
 ## Chameleon opts in — the devour visual (enemy squishing down the tongue
 ## into the mouth) only makes sense for a tongue-grab attack.
 @export var can_devour_enemies: bool = false
+
+@export_group("Pounce")
+## Secret mechanic, same shape as can_devour_enemies above: once this
+## species has landed KILLS_NEEDED_TO_POUNCE normal hits (see
+## player_controller.gd), its next pounce is a guaranteed kill on whatever
+## it lands on, consuming the charge; a pounce that lands on nothing keeps
+## the charge banked for next time, same as a missed tongue grab doesn't
+## spend the Chameleon's fly count. Only species with can_pounce = true (and
+## a non-empty anim_pounce) get the input at all.
+@export var can_pounce: bool = false
+@export var anim_pounce: String = ""
+## Separate from attack_hit_*_fraction -- the pounce is a much longer,
+## differently-timed clip (tackle + clamp + rip) than the regular attack.
+@export var pounce_hit_start_fraction: float = 0.4
+@export var pounce_hit_end_fraction: float = 0.68
+## The pounce's reach/timing differs enough from the regular attack
+## (driving prey down to the ground first) that it needs its own hitbox
+## placement rather than reusing hitbox_offset/hitbox_radius -- swapped in
+## for the duration of the pounce, then restored.
+@export var pounce_hitbox_offset: Vector3 = Vector3(0, 0.3, -1.0)
+@export var pounce_hitbox_radius: float = 0.5
