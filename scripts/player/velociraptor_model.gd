@@ -466,18 +466,84 @@ func _make_run_animation(cycle_length: float, pitch_deg: float, bob_height: floa
 
 	return anim
 
-## Forward lunge timed to line up with velociraptor_species.tres's
-## attack_hit_*_fraction, same convention as every other species' attack.
+## Stakeholder-specified attack, four phases in whole-body position/rotation
+## tracks (no jaw bone to animate independently -- same constraint as every
+## other whole-body-rotation clip here): a crouched windup, a forward-and-
+## down tackle that drives the body low as if pinning prey to the ground, a
+## clamping hold, and a sideways wrench ("rip") before recovering back to
+## idle. attack_hit_start/end_fraction in velociraptor_species.tres are
+## timed to the clamp+rip span (not the windup/tackle travel or the
+## recovery), since that's the part that's actually supposed to connect.
+const BITE_LENGTH := 0.8
+
 func _make_bite_animation() -> Animation:
 	var anim := Animation.new()
-	anim.length = 0.5
+	anim.length = BITE_LENGTH
 	anim.loop_mode = Animation.LOOP_NONE
-	var track := anim.add_track(Animation.TYPE_VALUE)
-	anim.track_set_path(track, NodePath(".:position:z"))
-	anim.track_insert_key(track, 0.0, 0.0)
-	anim.track_insert_key(track, 0.18, 0.4)
-	anim.track_insert_key(track, 0.32, 0.4)
-	anim.track_insert_key(track, 0.5, 0.0)
+
+	# Phase timings, as fractions of BITE_LENGTH -- kept named rather than
+	# inlined so the four phases below (and attack_hit_*_fraction in the
+	# species resource, which must line up with t_clamp/t_rip_end) stay
+	# readable as the same handful of beats the stakeholder described.
+	var t_crouch := BITE_LENGTH * 0.12
+	var t_impact := BITE_LENGTH * 0.30 ## tackle lands -- prey hits the ground
+	var t_clamp := BITE_LENGTH * 0.40 ## jaws have closed, hold begins
+	var t_rip_end := BITE_LENGTH * 0.68 ## wrench to the side finishes
+	var t_end := BITE_LENGTH
+
+	# Forward lunge: a brief pull-back (anticipation) then the tackle drives
+	# the body forward, holds through the clamp+rip, then releases back.
+	var z := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(z, NodePath(".:position:z"))
+	anim.track_insert_key(z, 0.0, 0.0)
+	anim.track_insert_key(z, t_crouch, -0.06)
+	anim.track_insert_key(z, t_impact, 0.55)
+	anim.track_insert_key(z, t_rip_end, 0.6)
+	anim.track_insert_key(z, t_end, 0.0)
+
+	# Downward drive: the tackle drives low, as if forcing prey down to the
+	# ground, then holds down through the bite/rip before standing back up.
+	var y := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(y, NodePath(".:position:y"))
+	anim.track_insert_key(y, 0.0, 0.0)
+	anim.track_insert_key(y, t_crouch, -0.02)
+	anim.track_insert_key(y, t_impact, -0.19)
+	anim.track_insert_key(y, t_clamp, -0.15) ## small rebound settling after impact
+	anim.track_insert_key(y, t_rip_end, -0.15)
+	anim.track_insert_key(y, t_end, 0.0)
+
+	# Forward pitch: head-down diving posture through the tackle and bite,
+	# easing back upright during the rip (the wrench is mostly yaw, not
+	# more pitch) and fully through recovery.
+	var rx := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(rx, NodePath(".:rotation:x"))
+	anim.track_insert_key(rx, 0.0, 0.0)
+	anim.track_insert_key(rx, t_crouch, deg_to_rad(-8.0))
+	anim.track_insert_key(rx, t_impact, deg_to_rad(32.0))
+	anim.track_insert_key(rx, t_clamp, deg_to_rad(28.0))
+	anim.track_insert_key(rx, t_rip_end, deg_to_rad(18.0))
+	anim.track_insert_key(rx, t_end, 0.0)
+
+	# The rip itself: jaws are clamped (held by the z/y/rx tracks above)
+	# while the body wrenches sideways around the vertical axis, tearing
+	# rather than just biting straight down -- this is the move's actual
+	# signature beat, so it gets the fastest, largest motion of the clip.
+	var ry := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(ry, NodePath(".:rotation:y"))
+	anim.track_insert_key(ry, 0.0, 0.0)
+	anim.track_insert_key(ry, t_clamp, 0.0)
+	anim.track_insert_key(ry, t_rip_end, deg_to_rad(-34.0))
+	anim.track_insert_key(ry, t_end, 0.0)
+
+	# A little roll riding along with the yaw wrench sells it as a
+	# whole-body tear rather than the head spinning in place.
+	var rz := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(rz, NodePath(".:rotation:z"))
+	anim.track_insert_key(rz, 0.0, 0.0)
+	anim.track_insert_key(rz, t_clamp, 0.0)
+	anim.track_insert_key(rz, t_rip_end, deg_to_rad(11.0))
+	anim.track_insert_key(rz, t_end, 0.0)
+
 	return anim
 
 func _make_death_animation() -> Animation:

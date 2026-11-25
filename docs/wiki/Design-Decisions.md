@@ -212,6 +212,23 @@ rather than editing history.
   used instead specifically because both feet plant directly under the
   body with no gap, and it already shipped with a clean alpha channel
   (no hand-tracing needed, unlike the Tiger Shark's photo).
+- **The Velociraptor's attack is a stakeholder-specified four-beat move —
+  tackle to the ground, clamp, rip sideways — not a generic lunge-bite
+  copied from the other species.** `_make_bite_animation()` in
+  `velociraptor_model.gd` has five value tracks (position x/y, rotation
+  x/y/z) keyed through named phase markers (`t_crouch`, `t_impact`,
+  `t_clamp`, `t_rip_end`) rather than the two-or-three-key lunges the fish
+  and Komodo Dragon use, since "tackle down, then wrench the head sideways
+  while jaws are clamped" doesn't reduce to a single forward poke. The
+  wrench is a yaw (`rotation:y`) snap during the held-down clamp, not more
+  forward motion — that's the part actually meant to read as "rip," so it
+  gets the clip's fastest, largest motion. `attack_hit_start/end_fraction`
+  and `hitbox_offset` in `velociraptor_species.tres` were retimed/moved
+  to the clamp+rip span specifically (not the tackle travel or recovery),
+  since the hitbox is a static sphere relative to the character root (see
+  `player_controller.gd` — it doesn't track the animated model's position)
+  and needs to sit where the bite actually lands at the point damage is
+  meant to apply, not at the model's rest pose.
 - **No existing dinosaur model, real or CC0, was found** (Sketchfab/
   poly.pizza/OpenGameArt/Quaternius all searched) — same situation as the
   Sparrow's missing bird model and the Tuna/shark's missing fish models,
