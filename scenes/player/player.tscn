@@ -38,7 +38,7 @@ script = ExtResource("3_hitbox")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, 0)
 
 [node name="SpringArm3D" type="SpringArm3D" parent="CameraPivot"]
-spring_length = 6.0
+spring_length = 4.0
 shape = SubResource("CapsuleShape3D_1")
 margin = 0.3
 

@@ -81,6 +81,7 @@ func _spawn_model() -> void:
 	var sphere := SphereShape3D.new()
 	sphere.radius = species.hitbox_radius
 	hitbox_shape.shape = sphere
+	OutlineEffect.apply(instance, OutlineEffect.ENEMY_COLOR, species.model_scale)
 
 func _find_animation_player(node: Node) -> AnimationPlayer:
 	for child in node.get_children():

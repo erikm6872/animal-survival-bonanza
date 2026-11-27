@@ -155,6 +155,7 @@ func _spawn_model() -> void:
 		fur_mesh = instance.get_node(species.fur_mesh_path)
 
 	_use_normal_hitbox()
+	OutlineEffect.apply(instance, OutlineEffect.PLAYER_COLOR, species.model_scale)
 
 func _find_animation_player(node: Node) -> AnimationPlayer:
 	for child in node.get_children():

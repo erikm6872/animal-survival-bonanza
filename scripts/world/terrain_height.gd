@@ -45,9 +45,17 @@ const PONDS: Array[Dictionary] = [
 ]
 const POND_BED_DEPTH: float = 1.2 ## how far below the water surface the carved bed sits
 
+# Clearings: a low-frequency noise field thresholded into open-field blobs,
+# sprinkled through the forest so biome_populator.gd's scatter has somewhere
+# to leave bare -- otherwise a denser forest reads as wall-to-wall trees
+# with nowhere to see or move freely.
+const CLEARING_FREQUENCY: float = 0.012
+const CLEARING_THRESHOLD: float = 0.35 ## higher = less of the map counts as a clearing
+
 static var _noise_large: FastNoiseLite
 static var _noise_detail: FastNoiseLite
 static var _noise_mountain: FastNoiseLite
+static var _noise_clearing: FastNoiseLite
 
 static func get_height(x: float, z: float) -> float:
 	if _noise_large == null:
@@ -77,6 +85,17 @@ static func _mountain_height(x: float, z: float) -> float:
 	var envelope := smoothstep(0.0, 1.0, t)
 	var ridge := 1.0 - absf(_noise_mountain.get_noise_2d(x, z))
 	return envelope * MOUNTAIN_MAX_HEIGHT * ridge
+
+## True inside a sprinkled-open-field blob -- used by biome_populator.gd to
+## leave clearings bare rather than scattering vegetation uniformly
+## everywhere. Called independently of get_height() (e.g. before any height
+## has been sampled yet), so it lazily inits its own noise field too.
+static func is_clearing(x: float, z: float) -> bool:
+	if _noise_clearing == null:
+		_noise_clearing = FastNoiseLite.new()
+		_noise_clearing.seed = NOISE_SEED + 3
+		_noise_clearing.frequency = CLEARING_FREQUENCY
+	return _noise_clearing.get_noise_2d(x, z) > CLEARING_THRESHOLD
 
 static func river_center_z(x: float) -> float:
 	return RIVER_CENTER_Z + RIVER_MEANDER_AMPLITUDE * sin(x * RIVER_MEANDER_FREQUENCY)
