@@ -1,12 +1,16 @@
 shader_type spatial;
 
-// Inverted-hull outline: a slightly-enlarged, backface-only copy of a mesh.
-// depth_test_inverted flips the usual depth comparison so this shell only
-// survives where something nearer has ALREADY been drawn (i.e. it's
-// genuinely obstructed) and is discarded everywhere the view is clear --
-// see OutlineEffect (scripts/core/outline_effect.gd) for how draw order
-// (scene, then this shell, then the real body) makes that work.
-render_mode unshaded, cull_front, depth_draw_never, depth_test_inverted;
+// Inverted-hull outline: a slightly-enlarged, backface-only copy of a mesh,
+// drawn with depth testing off so it's visible through obstruction once
+// shown. Visibility itself (only-when-obstructed) is NOT done here -- a
+// per-pixel depth trick turned out to always self-occlude against the
+// character's own body no matter the draw order (the shell is, by
+// definition, always geometrically behind its own owner's front face).
+// Instead scripts/core/outline_visibility.gd toggles this mesh's `visible`
+// based on a physics raycast from the camera to the character, so this
+// shader only has to worry about rendering through obstruction once it's
+// told to be on.
+render_mode unshaded, cull_front, depth_draw_never, depth_test_disabled;
 
 uniform vec4 outline_color : source_color = vec4(1.0, 1.0, 1.0, 1.0);
 uniform float outline_width : hint_range(0.0, 0.5) = 0.05;

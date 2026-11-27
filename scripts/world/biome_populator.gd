@@ -11,9 +11,11 @@ extends Node3D
 ## why the forest felt sparse afterward. Counts below are rebalanced to
 ## roughly the original per-square-meter density over the new area, times
 ## a further density bump for a denser, more varied forest feel -- tall
-## trees and bushes bumped again on top of that for a thicker canopy, with
-## TerrainHeight.is_clearing() carving bare fields/clearings back out of
-## the result so it doesn't read as solid wall-to-wall forest.
+## trees and bushes bumped again on top of that for a thicker canopy, and
+## tree counts doubled again across the board per follow-up feedback that
+## it still wasn't thick enough. TerrainHeight.is_clearing() carves bare
+## fields/clearings back out of the result so it doesn't read as solid
+## wall-to-wall forest despite the density.
 
 ## Small undergrowth-scale trees — young growth filling gaps between the
 ## bigger canopy trees.
@@ -92,15 +94,25 @@ const ROCK_SCENES_LARGE: Array[String] = [
 	"res://assets/models/nature-kit/stone_tallA.glb",
 ]
 
-@export var small_tree_count: int = 320
-@export var medium_tree_count: int = 480
-@export var tall_tree_count: int = 220
+@export var small_tree_count: int = 640
+@export var medium_tree_count: int = 960
+@export var tall_tree_count: int = 440
 @export var bush_count: int = 520
 @export var small_rock_count: int = 220
 @export var large_rock_count: int = 80
 @export var play_area_half_size: float = 180.0
 @export var safe_zone_radius: float = 10.0 ## keep clear around spawn/dummy
 @export var rng_seed: int = 20260827
+
+## Bit 10 -- a collision layer that exists purely so
+## scripts/core/outline_visibility.gd can raycast-test whether vegetation
+## is blocking the view of a player/enemy. Deliberately NOT part of any
+## movement collision mask, so this never makes trees/bushes/rocks solid
+## to walk through -- it only makes them detectable as "something is in
+## the way" for the outline effect.
+const VISION_BLOCKER_COLLISION_LAYER: int = 1 << 9
+const VISION_BLOCKER_RADIUS: float = 0.6 ## generic per-item radius before scale_factor; doesn't need to match each asset's exact silhouette
+const VISION_BLOCKER_HEIGHT: float = 3.0
 
 func _ready() -> void:
 	var rng := RandomNumberGenerator.new()
@@ -139,4 +151,24 @@ func _scatter(scene_paths: Array[String], count: int, rng: RandomNumberGenerator
 		var basis := Basis(Vector3.UP, rng.randf_range(0.0, TAU))
 		basis = basis.scaled(Vector3.ONE * scale_factor)
 		inst.transform = Transform3D(basis, Vector3(x, y, z))
+		_add_vision_blocker(inst)
 		placed += 1
+
+## A simple cylinder on its own dedicated collision layer -- see
+## VISION_BLOCKER_COLLISION_LAYER -- so outline_visibility.gd can detect
+## this item as an obstruction without it ever affecting movement. Sized in
+## inst's own local space (no manual scale multiply) since inst's transform
+## already carries scale_factor and StaticBody3D/CollisionShape3D inherit
+## that from their parent like any other node.
+func _add_vision_blocker(inst: Node3D) -> void:
+	var body := StaticBody3D.new()
+	body.collision_layer = VISION_BLOCKER_COLLISION_LAYER
+	body.collision_mask = 0
+	var shape := CollisionShape3D.new()
+	var cylinder := CylinderShape3D.new()
+	cylinder.radius = VISION_BLOCKER_RADIUS
+	cylinder.height = VISION_BLOCKER_HEIGHT
+	shape.shape = cylinder
+	shape.position.y = cylinder.height * 0.5
+	body.add_child(shape)
+	inst.add_child(body)
