@@ -31,6 +31,7 @@ func _process(delta: float) -> void:
 	var to_point := target.global_position + Vector3(0, CHEST_HEIGHT_OFFSET, 0)
 	var space_state := target.get_world_3d().direct_space_state
 	var query := PhysicsRayQueryParameters3D.create(camera.global_position, to_point, VISION_BLOCKER_MASK)
+	query.hit_from_inside = true ## the close-in camera frequently ends up embedded in foliage; without this, a ray starting inside a vision-blocker collider reports no hit at all, missing the most common obstruction case
 	var result := space_state.intersect_ray(query)
 	var obstructed := not result.is_empty()
 	for shell in shells:
