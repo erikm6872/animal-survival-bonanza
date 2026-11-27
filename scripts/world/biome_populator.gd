@@ -4,17 +4,13 @@ extends Node3D
 ## they sit correctly on the hills. Fixed seed so the layout is stable
 ## across runs.
 ##
-## Counts/areas were last tuned when the map's play_area_half_size was
-## still 90 (TERRAIN_SIZE 200); the map size increase that doubled
-## play_area_half_size to 180 quadrupled the scattered area (side length
-## doubles, area is squared) without raising the counts to match, which is
-## why the forest felt sparse afterward. Counts below are rebalanced to
-## roughly the original per-square-meter density over the new area, times
-## a further density bump for a denser, more varied forest feel -- tall
-## trees and bushes bumped again on top of that for a thicker canopy, and
-## tree counts doubled again across the board per follow-up feedback that
-## it still wasn't thick enough. TerrainHeight.is_clearing() carves bare
-## fields/clearings back out of the result so it doesn't read as solid
+## Counts/scales have been bumped several times over for a denser, thicker,
+## taller forest feel, most recently per feedback that trees still weren't
+## large enough in any dimension. Scatter area is a disk out to
+## TerrainHeight.MOUNTAIN_START_RADIUS (not a square) so the forest stops
+## right at the foot of the mountain ring instead of continuing onto the
+## mountainside. TerrainHeight.is_clearing() still carves bare
+## fields/clearings back out of that disk so it doesn't read as solid
 ## wall-to-wall forest despite the density.
 
 ## Small undergrowth-scale trees — young growth filling gaps between the
@@ -100,7 +96,6 @@ const ROCK_SCENES_LARGE: Array[String] = [
 @export var bush_count: int = 520
 @export var small_rock_count: int = 220
 @export var large_rock_count: int = 80
-@export var play_area_half_size: float = 180.0
 @export var safe_zone_radius: float = 10.0 ## keep clear around spawn/dummy
 @export var rng_seed: int = 20260827
 
@@ -117,9 +112,9 @@ const VISION_BLOCKER_HEIGHT: float = 3.0
 func _ready() -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = rng_seed
-	_scatter(TREE_SCENES_SMALL, small_tree_count, rng, 1.0, 1.8)
-	_scatter(TREE_SCENES_MEDIUM, medium_tree_count, rng, 2.2, 3.4)
-	_scatter(TREE_SCENES_TALL, tall_tree_count, rng, 3.2, 5.0)
+	_scatter(TREE_SCENES_SMALL, small_tree_count, rng, 1.3, 2.2)
+	_scatter(TREE_SCENES_MEDIUM, medium_tree_count, rng, 2.8, 4.5)
+	_scatter(TREE_SCENES_TALL, tall_tree_count, rng, 4.0, 6.5)
 	_scatter(BUSH_SCENES, bush_count, rng, 0.8, 1.6)
 	_scatter(ROCK_SCENES_SMALL, small_rock_count, rng, 0.6, 1.3)
 	_scatter(ROCK_SCENES_LARGE, large_rock_count, rng, 1.2, 2.4)
@@ -133,9 +128,15 @@ func _scatter(scene_paths: Array[String], count: int, rng: RandomNumberGenerator
 	var attempts := 0
 	while placed < count and attempts < count * 10:
 		attempts += 1
-		var x := rng.randf_range(-play_area_half_size, play_area_half_size)
-		var z := rng.randf_range(-play_area_half_size, play_area_half_size)
-		if Vector2(x, z).length() < safe_zone_radius:
+		# Uniform-by-area sampling within a disk (radius = R * sqrt(u), the
+		# standard way to avoid center-clustering) out to
+		# TerrainHeight.MOUNTAIN_START_RADIUS, so vegetation stops right at
+		# the foot of the mountain ring instead of continuing onto it.
+		var angle := rng.randf_range(0.0, TAU)
+		var radius := sqrt(rng.randf()) * TerrainHeight.MOUNTAIN_START_RADIUS
+		var x := cos(angle) * radius
+		var z := sin(angle) * radius
+		if radius < safe_zone_radius:
 			continue
 		if TerrainHeight.is_water(x, z):
 			continue
