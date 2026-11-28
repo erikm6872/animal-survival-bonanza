@@ -45,7 +45,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6, 0)
 script = ExtResource("13_player_spawner")
 
 [node name="TrainingDummy" parent="." instance=ExtResource("8_training_dummy")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0, -20)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0, -28)
 
 [node name="Vegetation" type="Node3D" parent="."]
 script = ExtResource("10_biome_pop")

@@ -62,9 +62,18 @@ const CLEARING_THRESHOLD: float = 0.35 ## higher = less of the map counts as a c
 # this smooth function every 2m and triangulates a straight line between
 # samples, renders it as a visibly steep ramp right outside the entrance
 # rather than the gentle slope the underlying math describes.
-const CAVE_MOUND_RADIUS: float = 16.0
+#
+# CAVE_MOUND_HEIGHT is deliberately modest: a sin(t*PI) hump was tried
+# first, but sin's *derivative* is nonzero at both t=0 and t=1 -- so even
+# though its value eased to 0 at both edges (no visible crack), its slope
+# did not, giving the mound a near-vertical wall exactly at its inner and
+# outer edges regardless of how wide the ring was. _apply_cave() below uses
+# a quartic bump (16*t^2*(1-t)^2) instead, whose slope is also 0 at both
+# edges, so the rise/fall actually eases in and out like the rest of this
+# ring already does.
+const CAVE_MOUND_RADIUS: float = 24.0
 const CAVE_HOLLOW_RADIUS: float = 7.2
-const CAVE_MOUND_HEIGHT: float = 4.5
+const CAVE_MOUND_HEIGHT: float = 1.0
 
 static var _noise_large: FastNoiseLite
 static var _noise_detail: FastNoiseLite
@@ -119,7 +128,8 @@ static func _apply_cave(x: float, z: float, natural: float) -> float:
 		return flat
 	var t := clampf((dist - CAVE_HOLLOW_RADIUS) / (CAVE_MOUND_RADIUS - CAVE_HOLLOW_RADIUS), 0.0, 1.0)
 	var blended := lerpf(flat, natural, smoothstep(0.0, 1.0, t))
-	return blended + CAVE_MOUND_HEIGHT * sin(t * PI)
+	var bump := 16.0 * t * t * (1.0 - t) * (1.0 - t) ## 0 at t=0/1 with zero slope there too, peak 1 at t=0.5
+	return blended + CAVE_MOUND_HEIGHT * bump
 
 static var _cave_flat_height_cached: bool = false
 static var _cave_flat_height_cache: float = 0.0
