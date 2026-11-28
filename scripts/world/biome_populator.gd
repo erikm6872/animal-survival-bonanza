@@ -96,7 +96,7 @@ const ROCK_SCENES_LARGE: Array[String] = [
 @export var bush_count: int = 520
 @export var small_rock_count: int = 220
 @export var large_rock_count: int = 80
-@export var safe_zone_radius: float = 10.0 ## keep clear around spawn/dummy
+@export var safe_zone_radius: float = 12.0 ## keep clear of the spawn cave mound (TerrainHeight.CAVE_MOUND_RADIUS) and dummy
 @export var rng_seed: int = 20260827
 
 ## Bit 10 -- a collision layer that exists purely so

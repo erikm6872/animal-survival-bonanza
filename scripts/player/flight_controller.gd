@@ -113,8 +113,15 @@ func _ready() -> void:
 	var far_distance := spring_arm.spring_length
 	camera_distances = [far_distance, far_distance * 2.0 / 3.0, far_distance / 3.0]
 
+## Resets to the spawn cave at world origin -- used both for the initial
+## spawn (where PlayerSpawner already placed us at x=0,z=0, so this is a
+## no-op on X/Z) and for respawn-after-death, where it matters: without
+## resetting X/Z here too, death respawn would put the bird back exactly
+## where it died instead of back at the cave.
 func _reset_position() -> void:
-	global_position.y = TerrainHeight.get_height(global_position.x, global_position.z) + SPAWN_HEIGHT_ABOVE_GROUND
+	global_position.x = 0.0
+	global_position.z = 0.0
+	global_position.y = TerrainHeight.get_height(0.0, 0.0) + SPAWN_HEIGHT_ABOVE_GROUND
 
 func _spawn_model() -> void:
 	var instance: Node3D = species.model_scene.instantiate()

@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://b8k3n7p4w2tqr"]
+
+[ext_resource type="Script" path="res://scripts/world/spawn_cave.gd" id="1_spawn_cave"]
+
+[node name="SpawnCave" type="Node3D"]
+script = ExtResource("1_spawn_cave")

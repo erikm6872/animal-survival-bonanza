@@ -315,6 +315,21 @@ rather than editing history.
   so `get_instance_transform()` reads back zeros — placement checks that
   touch MultiMesh must run under the real renderer (`DISPLAY=:0`), the
   same way screenshot verification already does.
+- **The spawn/respawn cave is built from plain primitive-cube collision,
+  not the nature-kit's premade `cliff_blockCave_*` piece, and its entrance
+  is a bare gap rather than that piece's carved hole.** The asset's hole
+  axis isn't documented, and this environment has no reliable way to
+  render and visually confirm which direction it opens (see the browser-
+  preview `document.hidden` render-loop limitation already logged
+  elsewhere in this file). Code can self-check a value against physics,
+  but can't self-check "does this look right" — so the lower-fidelity,
+  fully-deterministic option (an actual gap in the wall ring, collision
+  and visual guaranteed identical by construction) was chosen over a
+  fancier piece whose orientation would have been a guess. The surrounding
+  hill is a ring-shaped bump in `TerrainHeight` (zero at both the inner and
+  outer radius, so the terrain mesh stays continuous — no cliff/crack),
+  not a separate mesh, keeping it consistent with every other terrain
+  feature's "one shared height function" rule above.
 
 ## Hostile wildlife
 

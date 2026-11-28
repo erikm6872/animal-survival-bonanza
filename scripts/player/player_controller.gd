@@ -297,6 +297,14 @@ func _respawn() -> void:
 	hud.update_health(damageable.current_health, damageable.max_health)
 	anim_player.play(species.anim_idle)
 
+	# Back to the spawn cave (world origin), not wherever the character
+	# died -- velocity/model.rotation also reset since a death mid-dodge or
+	# mid-knockback can otherwise leave them carried into the new spot.
+	velocity = Vector3.ZERO
+	model.rotation = Vector3.ZERO
+	global_position = Vector3(0.0, 0.0, 0.0)
+	global_position.y = TerrainHeight.get_height(0.0, 0.0) + 1.0
+
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("cycle_camera_distance"):
 		camera_distance_index = (camera_distance_index + 1) % camera_distances.size()

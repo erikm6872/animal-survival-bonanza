@@ -52,6 +52,15 @@ const POND_BED_DEPTH: float = 1.2 ## how far below the water surface the carved 
 const CLEARING_FREQUENCY: float = 0.012
 const CLEARING_THRESHOLD: float = 0.35 ## higher = less of the map counts as a clearing
 
+# Spawn cave: a ring-shaped mound around the origin (where the player
+# spawns/respawns -- see scenes/world/spawn_cave.tscn) that reads as a
+# hillside behind/around the cave's stone facade, rising up from flat,
+# unbumped ground at CAVE_HOLLOW_RADIUS (where spawn_cave.gd's room sits) and
+# tapering back down to ordinary terrain by CAVE_MOUND_RADIUS.
+const CAVE_MOUND_RADIUS: float = 10.5
+const CAVE_HOLLOW_RADIUS: float = 7.2
+const CAVE_MOUND_HEIGHT: float = 4.5
+
 static var _noise_large: FastNoiseLite
 static var _noise_detail: FastNoiseLite
 static var _noise_mountain: FastNoiseLite
@@ -72,6 +81,7 @@ static func get_height(x: float, z: float) -> float:
 	var base := _noise_large.get_noise_2d(x, z) * AMPLITUDE_LARGE \
 		+ _noise_detail.get_noise_2d(x, z) * AMPLITUDE_DETAIL
 	base += _mountain_height(x, z)
+	base += _cave_mound_height(x, z)
 	return _carve_water(x, z, base)
 
 ## Ridged noise (1 - abs(noise)) ramped in by radial distance from the map
@@ -85,6 +95,15 @@ static func _mountain_height(x: float, z: float) -> float:
 	var envelope := smoothstep(0.0, 1.0, t)
 	var ridge := 1.0 - absf(_noise_mountain.get_noise_2d(x, z))
 	return envelope * MOUNTAIN_MAX_HEIGHT * ridge
+
+## A smooth ring of raised ground between CAVE_HOLLOW_RADIUS and
+## CAVE_MOUND_RADIUS (0 at both edges -- so the terrain mesh stays
+## continuous, no cliff/crack -- peaking in between) so the cave reads as a
+## hill from outside while leaving the room/entrance footprint flat.
+static func _cave_mound_height(x: float, z: float) -> float:
+	var dist := Vector2(x, z).length()
+	var t := clampf((dist - CAVE_HOLLOW_RADIUS) / (CAVE_MOUND_RADIUS - CAVE_HOLLOW_RADIUS), 0.0, 1.0)
+	return CAVE_MOUND_HEIGHT * sin(t * PI)
 
 ## True inside a sprinkled-open-field blob -- used by biome_populator.gd to
 ## leave clearings bare rather than scattering vegetation uniformly
