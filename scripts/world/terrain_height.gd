@@ -56,8 +56,13 @@ const CLEARING_THRESHOLD: float = 0.35 ## higher = less of the map counts as a c
 # spawns/respawns -- see scenes/world/spawn_cave.tscn) that reads as a
 # hillside behind/around the cave's stone facade, rising up from flat,
 # unbumped ground at CAVE_HOLLOW_RADIUS (where spawn_cave.gd's room sits) and
-# tapering back down to ordinary terrain by CAVE_MOUND_RADIUS.
-const CAVE_MOUND_RADIUS: float = 10.5
+# tapering back down to ordinary terrain by CAVE_MOUND_RADIUS. The ring must
+# stay wide relative to terrain_generator.gd's 2m mesh grid -- too narrow
+# (originally 3.3m, under 2 grid cells) and the *mesh*, which only samples
+# this smooth function every 2m and triangulates a straight line between
+# samples, renders it as a visibly steep ramp right outside the entrance
+# rather than the gentle slope the underlying math describes.
+const CAVE_MOUND_RADIUS: float = 16.0
 const CAVE_HOLLOW_RADIUS: float = 7.2
 const CAVE_MOUND_HEIGHT: float = 4.5
 
@@ -81,7 +86,7 @@ static func get_height(x: float, z: float) -> float:
 	var base := _noise_large.get_noise_2d(x, z) * AMPLITUDE_LARGE \
 		+ _noise_detail.get_noise_2d(x, z) * AMPLITUDE_DETAIL
 	base += _mountain_height(x, z)
-	base += _cave_mound_height(x, z)
+	base = _apply_cave(x, z, base)
 	return _carve_water(x, z, base)
 
 ## Ridged noise (1 - abs(noise)) ramped in by radial distance from the map
@@ -96,14 +101,40 @@ static func _mountain_height(x: float, z: float) -> float:
 	var ridge := 1.0 - absf(_noise_mountain.get_noise_2d(x, z))
 	return envelope * MOUNTAIN_MAX_HEIGHT * ridge
 
-## A smooth ring of raised ground between CAVE_HOLLOW_RADIUS and
-## CAVE_MOUND_RADIUS (0 at both edges -- so the terrain mesh stays
-## continuous, no cliff/crack -- peaking in between) so the cave reads as a
-## hill from outside while leaving the room/entrance footprint flat.
-static func _cave_mound_height(x: float, z: float) -> float:
+## Flattens `natural` (the rolling-hills noise + mountain height computed so
+## far) to a single constant height everywhere inside CAVE_HOLLOW_RADIUS --
+## spawn_cave.gd's room is built flat, at a fixed height, and the natural
+## noise is not otherwise zero there, so without this the floor/walls
+## would sit at the wrong height (gaps or clipping) everywhere except the
+## one point (the origin) the room was measured from. Blends smoothly back
+## to the untouched natural terrain by CAVE_MOUND_RADIUS, with an added rise
+## in between so it reads as a hill around the cave rather than a flat disc
+## with a ring of bare dirt.
+static func _apply_cave(x: float, z: float, natural: float) -> float:
 	var dist := Vector2(x, z).length()
+	if dist >= CAVE_MOUND_RADIUS:
+		return natural
+	var flat := _cave_flat_height()
+	if dist <= CAVE_HOLLOW_RADIUS:
+		return flat
 	var t := clampf((dist - CAVE_HOLLOW_RADIUS) / (CAVE_MOUND_RADIUS - CAVE_HOLLOW_RADIUS), 0.0, 1.0)
-	return CAVE_MOUND_HEIGHT * sin(t * PI)
+	var blended := lerpf(flat, natural, smoothstep(0.0, 1.0, t))
+	return blended + CAVE_MOUND_HEIGHT * sin(t * PI)
+
+static var _cave_flat_height_cached: bool = false
+static var _cave_flat_height_cache: float = 0.0
+
+## The natural (noise + mountain) height at the world origin -- computed
+## directly rather than through get_height()/​_apply_cave() itself, to avoid
+## recursing into this same flattening logic.
+static func _cave_flat_height() -> float:
+	if not _cave_flat_height_cached:
+		var h := _noise_large.get_noise_2d(0.0, 0.0) * AMPLITUDE_LARGE \
+			+ _noise_detail.get_noise_2d(0.0, 0.0) * AMPLITUDE_DETAIL
+		h += _mountain_height(0.0, 0.0)
+		_cave_flat_height_cache = h
+		_cave_flat_height_cached = true
+	return _cave_flat_height_cache
 
 ## True inside a sprinkled-open-field blob -- used by biome_populator.gd to
 ## leave clearings bare rather than scattering vegetation uniformly
